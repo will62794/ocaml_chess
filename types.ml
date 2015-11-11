@@ -20,3 +20,14 @@ type game = {
 
 
 (* "piece" types (variant?) *)
+
+
+type chesspiece = 
+	|Pawn
+	|Rook
+	|Castle
+	|Bishop
+	|Knight
+	|Queen
+	|King
+			
