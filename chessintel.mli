@@ -7,4 +7,8 @@
 
 (* edit this interface *)
 
-val f : 'a -> 'a
+
+(*Takes in a board and a difficulty level and returns a move*) 
+val request_move: difficulty_level -> board -> move
+
+
