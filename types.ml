@@ -1,33 +1,34 @@
 
 (* Application-wide type defintions for CamlChess *)
 
-type game = {
-	board: int list list;
-	score: int;
-	players: string list;
-}
-
-(* "move" type (?) *)
-
-
-(* "boardsquare" type (?) *)
-
-
-(* "board" type (?) *)
-
-
-(* "player" type (?) *)
-
-
 (* "piece" types (variant?) *)
 
+type position = int * int
+type piece = string * position
 
 type chesspiece = 
-	|Pawn
-	|Rook
-	|Castle
-	|Bishop
-	|Knight
-	|Queen
-	|King
+	|Pawn of piece
+	|Rook of piece
+	|Bishop of piece
+	|Knight of piece
+	|Queen of piece
+	|King of piece
+
+(* "move" type (?) *)
+type movement = int*int
+type move = chesspiece * movement
+
+(* "boardsquare" type (?) *)
+type boardsquare = chesspiece option
+
+(* "board" type (?) *)
+type board = boardsquare list list
+
+(* "player" type (?) *)
+type player = string
+
+type game = {
+	board: board;
+	players: player list;
+}
 			
