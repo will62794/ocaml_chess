@@ -31,4 +31,6 @@ type game = {
 	board: board;
 	players: player list;
 }
+(*Represents the difficulty level invariant of 1 through 10. 1 being lowest ai difficulty. 10 being highest ai difficulty*)
+type difficulty_level = int
 			
