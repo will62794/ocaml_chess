@@ -8,4 +8,10 @@
 
 (* edit this interface *)
 
-val f : 'a -> 'a
+(*Prints the board to the display*)
+val print_board board -> () 
+
+(*Takes in string from display*)
+val parse_move string->move option 
+
+
