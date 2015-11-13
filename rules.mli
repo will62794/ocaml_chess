@@ -15,5 +15,6 @@
 *)
 val valid_move : move -> board -> bool
 
-
+(*Get all possible moves for piece on the board*) 
+val possible_movements: piece -> board-> move list
 
