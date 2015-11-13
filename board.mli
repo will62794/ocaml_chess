@@ -10,4 +10,9 @@
 
 (* edit this interface *)
 
-val f : 'a -> 'a
+
+(*Makes intial board with chess pieces in correct spot*)
+val make_init_board () -> board
+
+(*Executes a valid move and returns Some board. If move not valid return None*)
+val execute_move move->board->board option 
