@@ -8,4 +8,5 @@
 
 (* edit this interface *)
 
-val f : 'a -> 'a
+(*Takes in a board and returns a string that is a graphical representation of the board nicely formatted*) 
+val board_display_string board->string 
