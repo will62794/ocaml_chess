@@ -1,3 +1,5 @@
+open Types
+
 (* 
 	board.mli
 
