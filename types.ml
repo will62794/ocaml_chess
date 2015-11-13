@@ -4,7 +4,7 @@
 (* "piece" types (variant?) *)
 
 type position = int * int
-type piece = string * position
+type piece = {id: string ; name: string ; team: string} 
 
 type chesspiece = 
 	|Pawn of piece
