@@ -30,7 +30,7 @@ type piece = {
 	} 
 
 type boardpos = string*string (* (row,column) e.g. (5,a) *)
-type move = string * string (* descriptive chess notation (?) *)
+type move = string * string (* descriptive chess notation (?), or algebraic chess notation? *)
 type square = boardpos * piece option (* (column letter, piece) *)
 type row = (string * square ref) list (* (row #, list of squares) *)
 type board = (string * row) list 
