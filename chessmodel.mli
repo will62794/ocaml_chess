@@ -14,13 +14,25 @@ type move
 type piece
 type square
 
-(* Makes initial board with chess pieces in correct spot *)
+(* 
+	returns a board with pieces arranged in standard
+	starting chess positions. 
+*)
 val make_init_board: unit -> board
 
-(* returns a board with all squares empty *)
+
+(* 
+	returns a board where every square is empty analogous to a 
+	physical chess board with no pieces on it. 
+*)
 val make_empty_board: unit -> board
 
-(* Executes a valid move and returns Some board. If move not valid return None *)
+(* 
+	executes a move and returns a board option.
+	the returned board will represent the updated state
+	of the board after the move was executed. moves correspond to 
+	physical moves, not moves that are checked against chess rules.
+*)
 val execute_move: move -> board -> board option 
 
 
