@@ -35,12 +35,14 @@ type square = boardpos * piece option (* (column letter, piece) *)
 type row = (string * square ref) list (* (row #, list of squares) *)
 type board = (string * row) list 
 
+(* standard chess board size *)
 let brd_size = 8
 
 (* get nth letter of alphabet, lowercase *)
 let get_nth_letter (n:int) = 
 	String.lowercase (Char.escaped (Char.chr (n+65)))
 
+(* make a single board row with id "num" and all empty squares *)
 let make_empty_row (num:int) : row =
 	let numstr = string_of_int num in
 	let unitlist = [();();();();();();();()] in
@@ -72,7 +74,7 @@ let fill_square (sq:square) (p:piece) : square =
 
 (* 
 	returns square of move destination 
-	will ultimately depend on format we decide to use for encoding moves
+	-> implementation note (Will S.): will ultimately depend on format we decide to use for encoding moves
 *)
 let get_move_dest (m:move) : square = 
 	failwith "get_move_dest unimplemented"

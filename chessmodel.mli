@@ -33,8 +33,17 @@ val make_empty_board: unit -> board
 	the returned board will represent the updated state
 	of the board after the move was executed. moves correspond to 
 	physical moves, not moves that are checked against chess rules.
+	if move is invalid, returns None.
 *)
 val execute_move: move -> board -> board option 
+
+
+(* 
+
+	Possibly expose utility functions for
+	manipulating moves, pieces, squares 
+
+*)
 
 
 
