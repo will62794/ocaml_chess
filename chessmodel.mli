@@ -1,11 +1,12 @@
 
 (* 
-	board.mli
+	chessmodel.mli
 
-	board.ml provides the primitive operations for 
+	chessmodel provides the primitive operations for 
 	upating, modifying the current state of a game board.
-	Initializing pieces, making moves, etc. It does not
-	have any sense of chess rules built in.
+	Initializing pieces, making moves, etc. It has no 
+	built-in knowledge of game rules. It tries to roughly 
+	model a true, physical board.
 
 *)
 
