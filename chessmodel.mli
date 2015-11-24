@@ -45,6 +45,9 @@ val execute_move: move -> board -> board option
 
 *)
 
+(* takes a square and returns it's x,y coordinate position on the chess board *)
+val square_to_coords: square -> (int*int)
+
 
 
 

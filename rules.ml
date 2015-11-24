@@ -10,7 +10,7 @@ let possible_movements (p:piece) (brd:board) : move list =
 (* rule composition operator *)
 let (>>>) = failwith "no compose operator yet"
 
-type move_fxn = fun (int*int)
+type move_fxn = (int*int) -> (int*int)
 
 type rule_phys = move_fxn * string
 
