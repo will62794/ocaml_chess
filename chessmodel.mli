@@ -51,5 +51,6 @@ val execute_move: move -> board -> board option
 val square_to_coords: square -> (int*int)
 *)
 
-
+val display_helper_1: board -> piecekind option list list
+val display_helper_2: piecekind option list list -> string list list
 

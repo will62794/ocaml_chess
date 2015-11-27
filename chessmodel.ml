@@ -89,7 +89,7 @@ let get_nth_letter (n:int) =
 	String.lowercase (Char.escaped (Char.chr (n+65)))
 
 
-(*Precondition: s must only have on character*)
+(*Precondition: s must only have one character*)
 let get_int_of_letter (s:string) =
 	let c = s.[0] in
 	(Char.code c) - 96
@@ -228,8 +228,6 @@ let execute_move (move:move) board =
 (* --- HELPERS --- *)
 
 
-
-
 (*
 	returns square of move destination
 	-> implementation note (Will S.): will ultimately depend on format we decide to use for encoding moves
@@ -250,5 +248,54 @@ type piece = {
 		piecetype: piecekind;
 	}
 *)
+
+(*Converts a valid chess board into a piecekind list list which can be converted
+	to a string list list for use in display*)
+let display_helper_1 (b:board) =
+	let rec extract_x x =
+		match x with
+			| [] -> []
+			| (a,b)::t -> b::(extract_x t)
+	in
+	let rec extract_p s =
+		match s with
+			| [] -> []
+			| h::t -> let (a,b) = !h in b::(extract_p t)
+	in
+	let rec extract_pk p =
+		match p with
+			| [] -> []
+			| h::t -> match h with
+									| None -> None::(extract_pk t)
+									| Some h -> (Some h.piecetype)::(extract_pk t)
+	in
+	let rec extract_xs f xs =
+		match xs with
+			| [] -> []
+			| h::t -> (f h)::(extract_xs f t)
+	in
+	let rs = extract_x b in
+	let ss = extract_xs (extract_x) (rs) in
+	let ps = extract_xs (extract_p) (ss) in
+	extract_xs (extract_pk) (ps)
+
+(*Converts a piecekind option list list to a string list list for use in
+	display*)
+let rec display_helper_2 pks =
+	let rec f pks' =
+		match pks' with
+			| [] -> []
+			| h::t -> match h with
+								| None -> " "::(f t)
+								| Some Pawn -> "Pawn"::(f t)
+								| Some Knight -> "Knight"::(f t)
+								| Some Bishop -> "Bishop"::(f t)
+								| Some Rook -> "Rook"::(f t)
+								| Some King -> "King"::(f t)
+								| Some Queen -> "Queen"::(f t)
+	in
+	match pks with
+		| [] -> []
+		| h::t -> (f h)::(display_helper_2 t)
 
 

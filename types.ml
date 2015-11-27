@@ -1,12 +1,15 @@
 
+
+(* OBSOLETE
+
 (* Application-wide type defintions for CamlChess *)
 
 (* "piece" types (variant?) *)
 
 type position = int * int
-type piece = {id: string ; name: string ; team: string} 
+type piece = {id: string ; name: string ; team: string}
 
-type chesspiece = 
+type chesspiece =
 	|Pawn of piece
 	|Rook of piece
 	|Bishop of piece
@@ -33,4 +36,5 @@ type game = {
 }
 (*Represents the difficulty level invariant of 1 through 10. 1 being lowest ai difficulty. 10 being highest ai difficulty*)
 type difficulty_level = int
-			
+
+*)
