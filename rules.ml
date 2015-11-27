@@ -7,52 +7,101 @@ let possible_movements (p:piece) (brd:board) : move list =
 	failwith "possible_movements unimplemented"
 
 
-(* rule composition operator *)
-let (>>>) = failwith "no compose operator yet"
+type failtype = MovementImpossible | Disallowed
+type validation = Valid | Invalid of failtype
 
-type move_fxn = (int*int) -> (int*int)
-
-type rule_phys = move_fxn * string
-
-(* 
-
-TODO: IMPLEMENT RULES ENGINE 
-
-Deadline:
-
-Finish rules engine by November 30
+let board_size = 8
 
 
-Types of Rules:
+(* A diagonal movement of a distance that falls in range [near,far] *)
+let diagonal_mvmt (x,y) (x',y') (near) (far) =
+	let (dx,dy) =  ((x'-x),(y'-y)) in
+	abs(dx)=abs(dy) && 
+	abs(dx)>=near && abs(dx)<=far
 
-1. Physical Piece Movements
-	- Depends on:
-		-> Current Position (X,Y)
-		-> Destination (X',Y')
-	- Will not factor in other board pieces
+(*  An orthogonal movement (up, left, right, or down) of a 
+	distance that falls in range [near,far] *)
+let orthogonal_mvmt (x,y) (x',y') (near) (far)  =
+ 	let (dx,dy) =  ((x'-x),(y'-y)) in
+	(dx = 0 && dy>=near && dy<=far) ||
+	(dy = 0 && dx>=near && dx<=far)	
 
-2. Game State Specific
-	a. En Passant
-	b. Castling
-	c. Pawn Promotion
-	d. Check, Checkmate
+(* -- Piece Movement Rules -- *)
 
-3. Capture Rules
-	- Barring special rules, a piece can "capture" another piece if it can 
-	validly move to that space as per positioning rules, and the piece is of opposing
-	team
+let pawn_mvmt (x,y) (x',y') = 
+	(x'-x,y'-y) = (0,1)
 
+let knight_mvmt (x,y) (x',y') = 
+	(abs(x-x'),abs(y'-y))=(2,1) ||
+	(abs(x-x'),abs(y'-y))=(1,2)
 
+let bishop_mvmt (x,y) (x',y') = 
+	diagonal_mvmt (x,y) (x',y') 1 board_size
 
-Rule Checking:
+let rook_mvmt (x,y) (x',y') = 
+ 	orthogonal_mvmt (x,y) (x',y') 1 board_size
 
-	physical |> game_state_rules |> capture rules |> bool
+let queen_mvmt (x,y) (x',y') = 
+	diagonal_mvmt (x,y) (x',y') 1 board_size ||
+	orthogonal_mvmt (x,y) (x',y') 1 board_size 
 
-
-
+let king_mvmt (x,y) (x',y') = 
+	orthogonal_mvmt (x,y) (x',y') 1 1 || 
+	diagonal_mvmt (x,y) (x',y') 1 1 
 
 
 
 
+(* ------------------------------------------------------------ *)
+(* ------ TESTS ----------------------------------------------- *)
+(* ------------------------------------------------------------ *)
 
-*)
+TEST_MODULE "piece_movement_rule_tests" = struct
+
+	(* Pawn *)
+	TEST = (pawn_mvmt (3,3) (3,4))=true
+	TEST = (pawn_mvmt (5,2) (5,3))=true
+	TEST = (pawn_mvmt (3,3) (3,2))=false
+	TEST = (pawn_mvmt (3,3) (3,8))=false
+
+	(* Knight *)
+	TEST = (knight_mvmt (3,3) (5,4))=true
+	TEST = (knight_mvmt (3,3) (5,2))=true
+	TEST = (knight_mvmt (3,3) (4,5))=true
+	TEST = (knight_mvmt (3,3) (4,1))=true
+	TEST = (knight_mvmt (3,3) (1,4))=true
+	TEST = (knight_mvmt (3,3) (1,2))=true
+	TEST = (knight_mvmt (3,3) (2,5))=true
+	TEST = (knight_mvmt (3,3) (2,1))=true
+	TEST = (knight_mvmt (5,5) (8,8))=false
+	TEST = (knight_mvmt (7,7) (1,1))=false
+	TEST = (knight_mvmt (3,3) (6,6))=false
+
+	(* Rook *)
+	TEST = (rook_mvmt (3,3) (6,3))=true
+	TEST = (rook_mvmt (0,0) (0,5))=true
+
+	(* Bishop *)
+	TEST = (bishop_mvmt (3,3) (6,6))=true
+	TEST = (bishop_mvmt (2,2) (0,0))=true
+	TEST = (bishop_mvmt (3,3) (1,5))=true
+	TEST = (bishop_mvmt (3,3) (1,1))=true
+	TEST = (bishop_mvmt (3,3) (5,5))=true
+	TEST = (bishop_mvmt (3,3) (5,1))=true
+
+	(* Queen *)
+	TEST = (queen_mvmt (3,3) (7,3))=true
+	TEST = (queen_mvmt (3,3) (1,1))=true
+	TEST = (queen_mvmt (3,3) (6,3))=true
+	TEST = (queen_mvmt (3,3) (5,4))=false
+
+	(* King *)
+	TEST = (king_mvmt (3,3) (4,3))=true
+	TEST = (king_mvmt (3,3) (2,2))=true
+	TEST = (king_mvmt (3,3) (6,6))=false
+
+
+end
+
+
+
