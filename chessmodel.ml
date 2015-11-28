@@ -251,39 +251,34 @@ type piece = {
 
 (*Converts a valid chess board into a piecekind list list which can be converted
 	to a string list list for use in display*)
-let display_helper_1 (b:board) =
+let display_helper_1 (board:board) =
 	let rec extract_x x =
 		match x with
 			| [] -> []
 			| (a,b)::t -> b::(extract_x t)
 	in
-	let rec extract_p s =
-		match s with
+	let rec extract_pieces squares =
+		match squares with
 			| [] -> []
-			| h::t -> let (a,b) = !h in b::(extract_p t)
+			| h::t -> let (a,b) = !h in b::(extract_pieces t)
 	in
-	let rec extract_pk p =
-		match p with
+	let rec extract_piecekinds pieces =
+		match pieces with
 			| [] -> []
 			| h::t -> match h with
-									| None -> None::(extract_pk t)
-									| Some h -> (Some h.piecetype)::(extract_pk t)
+									| None -> None::(extract_piecekinds t)
+									| Some h -> (Some h.piecetype)::(extract_piecekinds t)
 	in
-	let rec extract_xs f xs =
-		match xs with
-			| [] -> []
-			| h::t -> (f h)::(extract_xs f t)
-	in
-	let rs = extract_x b in
-	let ss = extract_xs (extract_x) (rs) in
-	let ps = extract_xs (extract_p) (ss) in
-	extract_xs (extract_pk) (ps)
+	let rows = extract_x board in
+	let squaress = List.map (extract_x) (rows) in
+	let piecess = List.map (extract_pieces) (squaress) in
+	List.map (extract_piecekinds) (piecess)
 
 (*Converts a piecekind option list list to a string list list for use in
 	display*)
-let rec display_helper_2 pks =
-	let rec f pks' =
-		match pks' with
+let display_helper_2 piecekindss =
+	let rec f piecekinds =
+		match piecekinds with
 			| [] -> []
 			| h::t -> match h with
 								| None -> " "::(f t)
@@ -294,8 +289,15 @@ let rec display_helper_2 pks =
 								| Some King -> "King"::(f t)
 								| Some Queen -> "Queen"::(f t)
 	in
-	match pks with
-		| [] -> []
-		| h::t -> (f h)::(display_helper_2 t)
+	List.map f piecekindss
 
-
+(*Prints a string representation of a board*)
+let display board =
+  let piecekindss = display_helper_1 board in
+  let strss = display_helper_2 piecekindss in
+  let rec f strs =
+  	match strs with
+  		| [] -> print_endline("")
+  		| h::t -> print_string(" "^h^" "); f t
+  in
+  List.iter f strss
