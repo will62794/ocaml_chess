@@ -1,3 +1,4 @@
+open Chesstypes
 
 (*
 
@@ -91,7 +92,7 @@ let make_empty_board () : board =
 (* converts a boardpos into integer x,y board coordinates *)
 let boardpos_to_coords pos = 
 	let (xstr,ystr) = pos in
-	(int_of_string xstr,get_int_of_letter ystr)
+	(get_int_of_letter xstr,int_of_string ystr)
 
 (* (row,column) e.g. (5,a) *)
 let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =

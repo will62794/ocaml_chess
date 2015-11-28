@@ -1,3 +1,4 @@
+open Chesstypes
 open Chessmodel
 
 (* 

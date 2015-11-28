@@ -1,4 +1,5 @@
-open Chessmodel 
+open Chesstypes 
+open Chessmodel
 
 let valid_move (m:move) (brd:board) : bool = 
 	failwith "valid_move unimplemented"
@@ -9,8 +10,6 @@ let possible_movements (p:piece) (brd:board) : move list =
 
 type failtype = MovementImpossible | Disallowed
 type validation = Valid | Invalid of failtype
-
-let board_size = 8
 
 (*    Movement Rules    *)
 
@@ -27,36 +26,42 @@ let orthogonal_mvmt (x,y) (x',y') (near) (far)  =
 	(dx = 0 && dy>=near && dy<=far) ||
 	(dy = 0 && dx>=near && dx<=far)	
 
-(* pawn movemnent rule parameterized on direction. move_dir = {1,-1}. 1 for White, -1 for Black move *)
-let pawn_mvmt (x,y) (x',y') (movedir:int) = 
-	(x'-x,y'-y) = (0,movedir)
+let pawn_mvmt (x,y) (x',y') = 
+	(x'-x,y'-y) = (0,1)
 
 let knight_mvmt (x,y) (x',y') = 
 	(abs(x-x'),abs(y'-y))=(2,1) ||
 	(abs(x-x'),abs(y'-y))=(1,2)
 
 let bishop_mvmt (x,y) (x',y') = 
-	diagonal_mvmt (x,y) (x',y') 1 board_size
+	diagonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let rook_mvmt (x,y) (x',y') = 
- 	orthogonal_mvmt (x,y) (x',y') 1 board_size
+ 	orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let queen_mvmt (x,y) (x',y') = 
-	diagonal_mvmt (x,y) (x',y') 1 board_size ||
-	orthogonal_mvmt (x,y) (x',y') 1 board_size 
+	diagonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size ||
+	orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size 
 
 let king_mvmt (x,y) (x',y') = 
 	orthogonal_mvmt (x,y) (x',y') 1 1 || 
 	diagonal_mvmt (x,y) (x',y') 1 1 
 
-(* let movement_valid (m:move) (b:board) = 
-	let (piece,_,_) = m in
-	let ((src_x,src_y),(dest_x,dest_y)) = coords_of_move m in
-	match piece.piecetype with
-		| Pawn -> true
-		| Knight -> false
-		| _ -> false *)
+let mvmt_rules = 
+	[
+		(Pawn,(pawn_mvmt));
+		(Knight,(knight_mvmt));
+		(Bishop,(bishop_mvmt));
+		(Rook,(rook_mvmt));
+		(Queen,(queen_mvmt));
+		(King,(king_mvmt))
+	]
 
+let movement_rule (m:move) (b:board) = 
+	let (piece,_,_) = m in
+	let (src,dst) = coords_of_move m in
+	let mvmt_rule = (List.assoc piece.piecetype mvmt_rules) in
+	mvmt_rule (src) (dst)
 
 let is_vulnerable p brd = 
 	false
@@ -68,10 +73,10 @@ let is_vulnerable p brd =
 TEST_MODULE "piece_movement_rule_tests" = struct
 
 	(* Pawn *)
-	TEST = (pawn_mvmt (3,3) (3,4) 1)=true
-	TEST = (pawn_mvmt (5,2) (5,3) 1)=true
-	TEST = (pawn_mvmt (3,3) (3,2) 1)=false
-	TEST = (pawn_mvmt (3,3) (3,8) 1)=false
+	TEST = (pawn_mvmt (3,3) (3,4))=true
+	TEST = (pawn_mvmt (5,2) (5,3))=true
+	TEST = (pawn_mvmt (3,3) (3,2))=false
+	TEST = (pawn_mvmt (3,3) (3,8))=false
 
 	(* Knight *)
 	TEST = (knight_mvmt (3,3) (5,4))=true
@@ -108,6 +113,20 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 	TEST = (king_mvmt (3,3) (4,3))=true
 	TEST = (king_mvmt (3,3) (2,2))=true
 	TEST = (king_mvmt (3,3) (6,6))=false
+
+
+
+	(* General *)
+	let piece = {
+		id="P1";
+		team=White;
+		name="Pawn";
+		piecetype=Pawn;
+	}
+
+	let m = (piece,("a","5"),("a","6"))
+	let b = make_empty_board()
+	TEST = (movement_rule m b)=true
 
 
 end

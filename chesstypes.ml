@@ -4,6 +4,9 @@
 
 *)
 
+(* standard chess board size *)
+let brd_size = 8
+
 type team = White | Black
 
 type piecekind =
