@@ -14,10 +14,11 @@
 	a1 b1 c1 d1 e1 f1 g1 h1
 	-------- White --------
 
-	and numerical (easier for move computations):
+	Numerical (for move computations):
+
 	-------- Black --------
 	18 28 38 48 58 68 78 88
-	17 27 37 47 57 67 77 87
+	17 27 37 47 57 67 77 7
 	16 26 36 46 56 66 76 86
 	15 25 35 45 55 65 75 85
 	14 24 34 44 54 64 74 84
@@ -26,17 +27,7 @@
 	11 21 31 41 51 61 71 81
 	-------- White --------
 
-Addressing a square:
-
-	(row,column)
-	e.g. ("5","a")
-
- 	board is an association list that maps (row_index:string -> row:row)
-	row is an association lists that maps (col_index:string -> square ref)
-
-
 [ PIECE LABELINGS ]
-
 
 	------- Black ---------
 	R2 K2 B2 Q  K  B1 K1 R1
@@ -49,34 +40,19 @@ Addressing a square:
 	R1 K1 B1 Q  K  B2 K2 R2
 	------- White ---------
 
-	* each piece will also have
-	a "team" associated with it i.e. Black | White
+Addressing a square:
 
+	(row,column)
+	e.g. ("5","a")
+
+ 	board is an association list that maps (row_index:string -> row:row)
+	row is an association lists that maps (col_index:string -> square ref)
+
+	* each piece also has
+	a "team" associated with it i.e. Black | White
 
 *)
 
-type team = White | Black
-
-type piecekind =
-	| Pawn
-	| Knight
-	| Bishop
-	| Rook
-	| King
-	| Queen
-
-type piece = {
-		id: string; (* each piece will be identified by a unique id e.g. P4 or B2 *)
-		team: team; (* black or white *)
-		name: string; (* piece type *)
-		piecetype: piecekind;
-	}
-
-type boardpos = string * string (* (row,column) e.g. (5,a) *)
-type move = piece * boardpos * boardpos  (* represents a PHYSICAL move --> (piece, src, dest) *)
-type square = boardpos * piece option (* (position,piece); piece=None if the suare is empty *)
-type row = (string * square ref) list (* (row #, list of squares) *)
-type board = (string * row) list
 
 (* standard chess board size *)
 let brd_size = 8
@@ -196,8 +172,9 @@ let coords_of_move (m:move) =
 	(boardpos_to_coords src,boardpos_to_coords dest)
 
 
-
-(* ---  DISPLAY  --- *)
+(* ------------------------ *)
+(* ---  DISPLAY  ---------- *)
+(* ------------------------ *)
 
 (*Converts a valid chess board into a piecekind list list which can be converted
 	to a string list list for use in display*)

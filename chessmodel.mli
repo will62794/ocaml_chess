@@ -1,4 +1,4 @@
-
+open Chesstypes
 (*
 	chessmodel.mli
 
@@ -10,10 +10,6 @@
 
 *)
 
-type board
-type move 
-type piece
-type square
 
 (*
 	returns a board with pieces arranged in standard
