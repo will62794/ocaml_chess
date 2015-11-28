@@ -12,6 +12,7 @@ type validation = Valid | Invalid of failtype
 
 let board_size = 8
 
+(*    Movement Rules    *)
 
 (* A diagonal movement of a distance that falls in range [near,far] *)
 let diagonal_mvmt (x,y) (x',y') (near) (far) =
@@ -26,10 +27,9 @@ let orthogonal_mvmt (x,y) (x',y') (near) (far)  =
 	(dx = 0 && dy>=near && dy<=far) ||
 	(dy = 0 && dx>=near && dx<=far)	
 
-(* -- Piece Movement Rules -- *)
-
-let pawn_mvmt (x,y) (x',y') = 
-	(x'-x,y'-y) = (0,1)
+(* pawn movemnent rule parameterized on direction. move_dir = {1,-1}. 1 for White, -1 for Black move *)
+let pawn_mvmt (x,y) (x',y') (move_dir:int) = 
+	(x'-x,y'-y) = (0,move_dir)
 
 let knight_mvmt (x,y) (x',y') = 
 	(abs(x-x'),abs(y'-y))=(2,1) ||
@@ -49,7 +49,9 @@ let king_mvmt (x,y) (x',y') =
 	orthogonal_mvmt (x,y) (x',y') 1 1 || 
 	diagonal_mvmt (x,y) (x',y') 1 1 
 
-
+(* let movement_valid (m:move) (b:board)= 
+	failwith "none" *)
+	(* ((src_x,src_y),(dest_x,dest_y)) = get_move_positions m *)
 
 
 (* ------------------------------------------------------------ *)
