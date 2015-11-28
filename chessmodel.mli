@@ -11,7 +11,7 @@
 *)
 
 type board
-type move
+type move 
 type piece
 type square
 
@@ -37,6 +37,8 @@ val make_empty_board: unit -> board
 *)
 val execute_move: move -> board -> board option
 
+(* returns the ((src_x,src_y),(dest_x,dest_y)) of a move *)
+val coords_of_move: move -> (int*int)*(int*int)
 
 (*
 

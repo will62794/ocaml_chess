@@ -28,8 +28,8 @@ let orthogonal_mvmt (x,y) (x',y') (near) (far)  =
 	(dy = 0 && dx>=near && dx<=far)	
 
 (* pawn movemnent rule parameterized on direction. move_dir = {1,-1}. 1 for White, -1 for Black move *)
-let pawn_mvmt (x,y) (x',y') (move_dir:int) = 
-	(x'-x,y'-y) = (0,move_dir)
+let pawn_mvmt (x,y) (x',y') (movedir:int) = 
+	(x'-x,y'-y) = (0,movedir)
 
 let knight_mvmt (x,y) (x',y') = 
 	(abs(x-x'),abs(y'-y))=(2,1) ||
@@ -49,10 +49,17 @@ let king_mvmt (x,y) (x',y') =
 	orthogonal_mvmt (x,y) (x',y') 1 1 || 
 	diagonal_mvmt (x,y) (x',y') 1 1 
 
-(* let movement_valid (m:move) (b:board)= 
-	failwith "none" *)
-	(* ((src_x,src_y),(dest_x,dest_y)) = get_move_positions m *)
+(* let movement_valid (m:move) (b:board) = 
+	let (piece,_,_) = m in
+	let ((src_x,src_y),(dest_x,dest_y)) = coords_of_move m in
+	match piece.piecetype with
+		| Pawn -> true
+		| Knight -> false
+		| _ -> false *)
 
+
+let is_vulnerable p brd = 
+	false
 
 (* ------------------------------------------------------------ *)
 (* ------ TESTS ----------------------------------------------- *)
@@ -61,10 +68,10 @@ let king_mvmt (x,y) (x',y') =
 TEST_MODULE "piece_movement_rule_tests" = struct
 
 	(* Pawn *)
-	TEST = (pawn_mvmt (3,3) (3,4))=true
-	TEST = (pawn_mvmt (5,2) (5,3))=true
-	TEST = (pawn_mvmt (3,3) (3,2))=false
-	TEST = (pawn_mvmt (3,3) (3,8))=false
+	TEST = (pawn_mvmt (3,3) (3,4) 1)=true
+	TEST = (pawn_mvmt (5,2) (5,3) 1)=true
+	TEST = (pawn_mvmt (3,3) (3,2) 1)=false
+	TEST = (pawn_mvmt (3,3) (3,8) 1)=false
 
 	(* Knight *)
 	TEST = (knight_mvmt (3,3) (5,4))=true
