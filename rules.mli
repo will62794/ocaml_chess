@@ -21,6 +21,6 @@ val valid_move : move -> board -> bool
 (* Get all possible moves for piece on the board *) 
 val possible_movements: piece -> board-> move list
 
-(* Returns: the moved piece can be captured by the opponent *)
-val is_vulnerable: move -> board -> bool
+(* Returns: the board location is vulnerable to the opponent *)
+val is_vulnerable: boardpos -> board -> bool
 
