@@ -8,7 +8,7 @@
  * I. Captured pieces - point value of captured piece
  * II. Piece positioning - net gain in positional advantage
  * III. Piece vulnerabilities - number of and point values of vulnerable pieces
- * IV. Misc - misc stuff, such as castled formation, piece is being moved, check,
+ * IV. Misc - misc, such as castled formation, piece is being moved, check,
  *        pawn moved to end, avoidance of check mate
  *
  * INVARIANT: THE INPUTTED MOVE --MUST-- BE A VALID MOVE

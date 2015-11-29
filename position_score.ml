@@ -12,13 +12,15 @@
  *)
 
 open Chessmodel
+open Chesstypes
 
-type pos_board = int Array Array
+type pos_board = float array array
 
-let create_board (board: pos_board) (vals: int list) (row: int) (col: int): pos_board =
+let rec create_board (board: pos_board) (vals: float list)
+  (row: int) (col: int): pos_board =
   match vals with
   | [] -> board
-  | h::t -> board.col.row <- h;
+  | h::t -> board.(col).(row) <- h;
         if (col = 7) then create_board board t (row-1) 0
         else create_board board t row (col+1)
 
@@ -67,11 +69,11 @@ let king_vals_late = [-50.;-40.;-30.;-20.;-20.;-30.;-40.;-50.;
               -30.;-30.;  0.;  0.;  0.;  0.;-30.;-30.;
               -50.;-30.;-30.;-30.;-30.;-30.;-30.;-50.]
 
-let pawn_board = create_board (Array.make_matrix 8 8 0) pawn_vals 7 0
-let knight_board = create_board (Array.make_matrix 8 8 0) knight_vals 7 0
-let bishop_board = create_board (Array.make_matrix 8 8 0) bishop_vals 7 0
-let king_board_early = create_board (Array.make_matrix 8 8 0) king_vals_early 7 0
-let king_board_late = create_board (Array.make_matrix 8 8 0) king_vals_late 7 0
+let pawn_board = create_board (Array.make_matrix 8 8 0.) pawn_vals 7 0
+let knight_board = create_board (Array.make_matrix 8 8 0.) knight_vals 7 0
+let bishop_board = create_board (Array.make_matrix 8 8 0.) bishop_vals 7 0
+let king_board_early = create_board (Array.make_matrix 8 8 0.) king_vals_early 7 0
+let king_board_late = create_board (Array.make_matrix 8 8 0.) king_vals_late 7 0
 
 let get_pos_points (piece: piece) (move: boardpos) (early: bool): float =
   let pos = (match piece.team with
@@ -81,7 +83,7 @@ let get_pos_points (piece: piece) (move: boardpos) (early: bool): float =
   | Pawn -> pawn_board.(fst pos).(snd pos)
   | Knight -> knight_board.(fst pos).(snd pos)
   | Bishop -> bishop_board.(fst pos).(snd pos)
-  | Rook -> 0
+  | Rook -> 0.
   | King -> if early then king_board_early.(fst pos).(snd pos)
         else king_board_late.(fst pos).(snd pos)
-  | Queen -> 0
+  | Queen -> 0.

@@ -36,6 +36,10 @@ val execute_move: move -> board -> board option
 (* returns the ((src_x,src_y),(dest_x,dest_y)) of a move *)
 val coords_of_move: move -> (int*int)*(int*int)
 
+val get_int_of_letter: string -> int
+
+val get_nth_letter: int -> string
+
 (*
 
 	Possibly expose utility functions for
