@@ -40,6 +40,8 @@ val get_int_of_letter: string -> int
 
 val get_nth_letter: int -> string
 
+val get_square_on_board: boardpos -> board -> square ref
+
 (*
 
 	Possibly expose utility functions for

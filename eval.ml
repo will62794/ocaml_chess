@@ -21,6 +21,7 @@
 
 open Chessmodel
 open Position_score
+open Chesstypes
 
 (* multipliers representing the weighting of the 3 board eval factors;
  * to be adjusted in testing *)
@@ -40,7 +41,7 @@ let get_piece_val (piece: piece): float =
   | King -> failwith ""
 
 let get_piece (board: board) (loc: boardpos): piece option =
-  snd (!get_square_on_board loc board)
+  snd !(get_square_on_board loc board)
 
 (* points gathered from a piece capture *) (* change to use get piece *)
 let capture_points (board: board) (move: move) : float =
@@ -49,27 +50,27 @@ let capture_points (board: board) (move: move) : float =
    match !(get_square_on_board dest board) with
    | (_, pieceOp) ->
     match pieceOp with
-    | None -> 0
+    | None -> 0.
     | Some piece -> get_piece_val piece
 
 let position_points (board: board) (move: move) : float =
   match move with
-  | (piece, src, dest) -> (get_pos_points piece.piecetype dest true) +
+  | (piece, src, dest) -> (get_pos_points piece dest true) +.
     (match get_piece board dest with
-     | None -> 0
-     | Some cap_piece -> get_pos_points cap_piece.piecetype dest true)
+     | None -> 0.
+     | Some cap_piece -> get_pos_points cap_piece dest true)
 
 let vulnerable_points (board: board) (move: move) : float =
   match move with
-  | (piece, _, dest) ->
-    if (is_vulnerable dest board)
+  | (piece, _, dest) -> 0.
+    (* if (is_vulnerable dest board)
     then get_piece_val piece
-    else 0.
+    else 0. *)
 
 let misc_points (board: board) (move: move) : float = 0.
 
 let eval (board: board) (move: move) : float =
-  (capture_mult * (capture_points board move)) +
-  (position_mult * (position_points board move)) -
-  (vulnerable_mult * (vulnerable_points board move)) +
-  (misc_mult * (misc_points board move))
+  (capture_mult *. (capture_points board move)) +.
+  (position_mult *. (position_points board move)) -.
+  (vulnerable_mult *. (vulnerable_points board move)) +.
+  (misc_mult *. (misc_points board move))
