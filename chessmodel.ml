@@ -94,7 +94,7 @@ let boardpos_to_coords pos =
 	(get_int_of_letter ystr,int_of_string xstr)
 
 let coords_to_boardpos (x,y) =
-	(string_of_int x,get_nth_letter (y-1))
+	((string_of_int y),(get_nth_letter (x-1)))
 
 
 (* e.g. "1" -> "8", e.g. "3" -> "5" *)
@@ -259,6 +259,10 @@ let get_piece (board:board) (board_pos:boardpos) =
 	| None -> failwith "No piece there"
 
 
+(* ---------------------------*)
+(* -------- TESTS ----------- *)
+(* ---------------------------*)
+
 TEST_MODULE "invert_board_coords" = struct
 
 	let indices = ["a";"b";"c";"d";"e";"f";"g";"h"]
@@ -270,6 +274,12 @@ TEST_MODULE "invert_board_coords" = struct
 	TEST = (List.map invert_row_index indices)=expected
 
 	TEST = (invert_boardpos ("2","b"))=("7","g")
+
+end
+
+TEST_MODULE "test coordinate utilities" = struct
+	TEST = (coords_to_boardpos (3,6))=("6","c")
+	TEST = (coords_to_boardpos (1,8))=("8","a")
 
 end
 
