@@ -90,14 +90,16 @@ let make_empty_board () : board =
 	List.mapi (fun i () -> (string_of_int i,make_empty_row i)) unitlist
 
 (* converts a boardpos into integer x,y board coordinates *)
-let boardpos_to_coords pos = 
+let boardpos_to_coords pos =
 	let (xstr,ystr) = pos in
 	(get_int_of_letter xstr,int_of_string ystr)
 
 (* (row,column) e.g. (5,a) *)
 let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
-	let row_index = int_of_string (fst (board_pos)) in
-	let column_index = get_int_of_letter (snd board_pos) in
+	let row_index = int_of_string (fst (board_pos))-1 in
+	print_string (string_of_int (row_index));
+	let column_index = get_int_of_letter (snd board_pos)-1 in
+	print_string (string_of_int (column_index));
 	let row = snd (List.nth the_board row_index) in
 	let the_square = List.nth row column_index in
 	match the_square with
@@ -168,7 +170,7 @@ let execute_move (move:move) board =
 	second_square:= (dest, Some p) ;
 	Some board
 
-let coords_of_move (m:move) = 
+let coords_of_move (m:move) =
 	let (p,src,dest) = m in
 	(boardpos_to_coords src,boardpos_to_coords dest)
 
@@ -229,3 +231,45 @@ let display board =
   		| h::t -> print_string(" "^h^" "); f t
   in
   List.iter f strss
+
+
+let get_piece (board:board) (board_pos:boardpos) =
+	let square = !(get_square_on_board board_pos board) in
+	let piece_option = snd square in
+	match piece_option with
+	| Some p -> p
+	| None -> failwith "No piece there"
+
+
+
+let _ =
+let new_board = make_init_board () in
+display new_board ;
+(*piece * boardpos * boardpos*)
+(*boardpos = string * string*)
+let board_pos_1 = ("1", "c") in
+let board_pos_2 = ("4", "c") in
+let piece_1= get_piece new_board board_pos_1 in
+let move= (piece_1 , board_pos_1 , board_pos_2) in
+let board = match (execute_move move new_board) with
+| Some b -> b
+| None -> failwith "No piece there"
+in
+display board
+
+
+let _ =
+let new_board = make_init_board () in
+display new_board ;
+(*piece * boardpos * boardpos*)
+(*boardpos = string * string*)
+let board_pos_1 = ("3", "c") in
+let board_pos_2 = ("4", "c") in
+let piece_1= get_piece new_board board_pos_1 in
+let move= (piece_1 , board_pos_1 , board_pos_2) in
+let board = match (execute_move move new_board) with
+| Some b -> b
+| None -> failwith "No board"
+in
+display board ;
+
