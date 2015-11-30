@@ -84,7 +84,6 @@ let make_empty_row (num:int) : row =
 	in
 	List.mapi (fun i ()-> make_square i)  unitlist
 
-
 let make_empty_board () : board =
 	let unitlist = [();();();();();();();()] in
 	List.mapi (fun i () -> (string_of_int i,make_empty_row i)) unitlist
@@ -93,6 +92,9 @@ let make_empty_board () : board =
 let boardpos_to_coords pos =
 	let (xstr,ystr) = pos in
 	(get_int_of_letter xstr,int_of_string ystr)
+
+let coords_to_boardpos (x,y) =
+	(get_nth_letter x,string_of_int y)
 
 (* (row,column) e.g. (5,a) *)
 let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =

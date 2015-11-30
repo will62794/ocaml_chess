@@ -42,17 +42,10 @@ val get_nth_letter: int -> string
 
 val get_square_on_board: boardpos -> board -> square ref
 
-(*
+(* converts a boardpos into integer x,y board coordinates *)
+val boardpos_to_coords: boardpos -> (int*int)
 
-	Possibly expose utility functions for
-	manipulating moves, pieces, squares
-
-*)
-
-(* takes a square and returns it's x,y coordinate position on the chess board *)
-
-(*
-val square_to_coords: square -> (int*int)
-*)
+(* converts integer x,y coordinates into boardpos format*)
+val coords_to_boardpos: (int*int) -> boardpos
 
 
