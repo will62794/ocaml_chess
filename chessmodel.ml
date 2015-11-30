@@ -107,6 +107,10 @@ let invert_col_index col_str =
 	let col_int = get_int_of_letter col_str in
 	get_nth_letter ((brd_size)-col_int)
 
+let invert_boardpos brdpos = 
+	let row_str,col_str = brdpos in
+	(invert_row_index row_str,invert_col_index col_str)
+
 let reflect_board_row row = 
 	List.map (fun (col,sq) -> ((invert_col_index col),sq) ) row
 
@@ -264,6 +268,8 @@ TEST_MODULE "invert_board_coords" = struct
 	let indices = ["1";"2";"3";"4";"5";"6";"7";"8"]
 	let expected = ["8";"7";"6";"5";"4";"3";"2";"1"]
 	TEST = (List.map invert_row_index indices)=expected
+
+	TEST = (invert_boardpos ("2","b"))=("7","g")
 
 end
 
