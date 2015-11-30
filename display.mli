@@ -1,4 +1,4 @@
-
+open Chesstypes
 
 (*
 	graphics.mli
@@ -12,4 +12,4 @@
 
 (*Takes in a valid chess board and prints a string that is a graphical
  representation of the board nicely formatted*)
-val board_display_string : board -> unit
+(* val board_display_string : board -> unit *)

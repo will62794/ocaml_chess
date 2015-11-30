@@ -24,6 +24,7 @@
 open Chessmodel
 open Position_score
 open Chesstypes
+open Display
 
 (* multipliers representing the weighting of the 3 board eval factors;
  * to be adjusted in testing *)
@@ -77,3 +78,15 @@ let eval (board: board) (move: move) : float =
   (position_mult *. (position_points board move)) -.
   (vulnerable_mult *. (vulnerable_points board move)) +.
   (misc_mult *. (misc_points board move))
+
+let _ =
+let new_board = make_init_board () in
+(*piece * boardpos * boardpos*)
+(*boardpos = string * string*)
+let board_pos_1 = ("1", "c") in
+let board_pos_2 = ("7", "c") in
+let piece_1= (match get_piece new_board board_pos_1 with
+              | None -> failwith "aaa"
+              | Some x -> x) in
+let move= (piece_1 , board_pos_1 , board_pos_2) in
+Printf.printf "%f" (eval new_board move)
