@@ -55,6 +55,12 @@ val create_piece: string -> team -> string -> piecekind -> piece
 val add_piece_to_board: board -> boardpos -> string -> team -> string -> piecekind -> unit
 
 (* 
+	takes a board position and inverts each of its coordinates, so as to view
+	the coordinate from the opponent's viewpoint  e.g. invert_board_pos ("2","b") = ("7","g")
+*) 
+val invert_boardpos: boardpos -> boardpos
+
+(* 
 	takes a board and reflects its coordinate labels horizontally and vertically 
 	physically, this would correspond to spinning the board around and viewing it from
 	your opponent's perspective
