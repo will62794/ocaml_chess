@@ -180,6 +180,9 @@ let coords_of_move (m:move) =
 (* ---  DISPLAY  ---------- *)
 (* ------------------------ *)
 
+
+(*** Let's move display code to own module ***)
+
 (*Converts a valid chess board into a piecekind list list which can be converted
 	to a string list list for use in display*)
 let display_helper_1 (board:board) =
