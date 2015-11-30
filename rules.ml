@@ -3,6 +3,7 @@ open Chessmodel
 
 type failtype = MovementImpossible | Disallowed
 type validation = Valid | Invalid of failtype
+type specialmove = EnPassant | Castling | PawnPromotion
 
 (*  ---   Movement Rules  ---  *)
 
@@ -30,6 +31,8 @@ let bishop_mvmt (x,y) (x',y') =
 	diagonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let rook_mvmt (x,y) (x',y') = 
+(* 	Printf.printf "dx:%d\n" (x'-x);
+	Printf.printf "dy:%d\n" (y'-y); *)
  	orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let queen_mvmt (x,y) (x',y') = 
@@ -50,40 +53,62 @@ let mvmt_rules =
 		(King,(king_mvmt))
 	]
 
-let movement_rule (m:move) (b:board) = 
+(* is a move within the 8x8 board *)
+let inbounds_rule (m:move) : bool= 
+	let (_,_,dst) = m in
+	let (dst_x,dst_y) = boardpos_to_coords dst in
+	let lower,upper = (1,brd_size) in
+	(dst_x>=lower && dst_x<=upper && dst_y>=lower && dst_y<=upper)
+
+let movement_rule (m:move) (b:board) : bool = 
 	let (piece,s,d) = m in
-	let (src,dst) = (boardpos_to_coords s,boardpos_to_coords d) in
+	let (persp_s,persp_d) = 
+		if piece.team = White then (s,d)
+		else ((invert_boardpos s),(invert_boardpos d))
+	in
+	let (src,dst) = (boardpos_to_coords persp_s,boardpos_to_coords persp_d) in
 	let mvmt_rule = (List.assoc piece.piecetype mvmt_rules) in
-	mvmt_rule (src) (dst)
+	(mvmt_rule (src) (dst))
 
 
 (*  ---   Collision Detection  ---  *)
 		
 (* 
 	returns a list of the (x,y) positions that make up that path between start and end 
-	precondition: path can be made only diagonally or orthogonally  
+	precondition: path can be made only diagonally or orthogonally.
+	does not include src and dst in the path  
 *)
 let rec path_between src dst =
-	if src=dst then [] 
-	else
-		let (srcx,srcy),(dstx,dsty) = src,dst in
-		let next_x,next_y = (min (srcx+1) dstx),(min (srcy+1) dsty) in
+	let (srcx,srcy),(dstx,dsty) = src,dst in
+	let next_x,next_y = (min (srcx+1) dstx),(min (srcy+1) dsty) in
+	if (next_x,next_y)=dst 
+		then []
+	else 
 		(next_x,next_y)::(path_between (next_x,next_y) dst)
 
-(* Returns a list of pieces that lie on path from src to dest on brd*)
+(* Returns a list of pieces that lie on path from src to dest on brd *)
 let pieces_in_way (src:boardpos) (dest:boardpos) (brd:board) : piece list =
 	let (src,dest) = (boardpos_to_coords src,boardpos_to_coords dest) in
 	let path = List.map coords_to_boardpos (path_between src dest) in
+	(* let () = List.iter (fun (x,y) -> (Printf.printf "%s,%s\n" x y)) path in *)
 	let sqs = List.map (fun pos -> !(get_square_on_board pos brd)) path in
 	let occupied_sqs = List.filter (fun (pos,p) -> p<>None) sqs in
 	let piece_at_sq sq = 
 		let (pos,p)=sq in
-		match pos,p with
-		| _,Some pce -> pce
-		| _,None -> failwith "no piece" 
+		match (pos,p) with
+		 | _,Some pce -> pce
+		 | _,None -> failwith "no piece" 
 	in
+	(* let () = print_endline "" in *)
+	(* let () = List.iter (fun p -> print_endline p.name) (List.map piece_at_sq occupied_sqs) in *)
 	List.map piece_at_sq occupied_sqs
 
+(* returns bool determining if executing the given move would collide with other pieces *)
+let move_collisions (m:move) (brd:board) : bool = 
+	let (p,src,dst) = m in
+	let collisions = pieces_in_way src dst brd in
+	(* let () = print_endline (string_of_bool ((List.length collisions)>0)) in *)
+	(List.length collisions)>0
 
 let is_vulnerable_move m brd = 
 	false
@@ -94,13 +119,42 @@ let is_vulnerable_pos pos brd =
 let is_vulnerable p brd = 
 	false
 
-let valid_move (m:move) (brd:board) : bool = 
-	failwith "valid_move unimplemented"
 
-let possible_movements (p:piece) (brd:board) : move list = 
+
+
+(* 
+	Castling:
+		1. King moves 2 squares towards a rook, and the rook moves to the square the king crossed over
+		2. May only be done if the king has never moved, the rook involved has never moved, the suares b/w
+			the rook and king are not occupied
+*)
+let detect_castling (m:move) (brd:board) =
+	failwith ""
+
+let detect_en_passant (m:move) (brd:board) = 
+	failwith ""
+
+let detect_pawn_promotion (m:move) (brd:board) = 
+	failwith ""
+
+let detect_special_move (m:move) (brd:board) = 
+	false
+
+let handle_special_move (m:move) (brd:board) = 
+	false
+
+
+(* let _ = Printf.printf "%b\n" (move_collisions m brd) in  *)
+
+let valid_move (m:move) (brd:board) : bool =
+	if detect_special_move m brd then handle_special_move m brd (* dummy for now *)
+	else	
+		inbounds_rule m &&
+		movement_rule m brd &&
+		not (move_collisions m brd)
+
+let possible_movements (p:piece) (brd:board) : (move list) * (piece list) = 
 	failwith "possible_movements unimplemented"
-
-
 
 
 (* ------------------------------------------------------------ *)
@@ -173,9 +227,9 @@ end
 TEST_MODULE "path_collisions" = struct
 	
 	(* path_between *)
-	TEST = path_between (2,2) (4,4) = [(3,3);(4,4)]
-	TEST = path_between (2,2) (2,6) = [(2,3);(2,4);(2,5);(2,6)]
-	TEST = path_between (1,4) (6,4) = [(2,4);(3,4);(4,4);(5,4);(6,4)]
+	TEST = path_between (2,2) (4,4) = [(3,3)]
+	TEST = path_between (2,2) (2,6) = [(2,3);(2,4);(2,5)]
+	TEST = path_between (1,4) (6,4) = [(2,4);(3,4);(4,4);(5,4)]
 
 	let b = make_empty_board()
 	let src,dst = ("1","a"),("2","a")
@@ -186,16 +240,16 @@ TEST_MODULE "path_collisions" = struct
 	let pieces = (pieces_in_way src dst b)
 
 
-(* 	let x,y = boardpos_to_coords ("1","c")
+	(* Basic Queen Moves *)
+	let brd = make_empty_board()
+	let queen_white = { id="Q1"; team=White; name="Queen"; piecetype=Queen; }
+	let pawn_white = { id="P3"; team=White; name="Pawn"; piecetype=Pawn; }
+	let _ = add_piece_to_board (brd) ("3", "d") ("Q1") (White) ("Queen") (Queen)
+	let _ = add_piece_to_board (brd) ("3", "e") ("P3") (White) ("Pawn") (Pawn) 
 
-	let _ = print_int x
-	let _ = print_int y
-	let k = coords_to_boardpos (1,1)
-	let x,y = k *)
-
-(* 	let _ = print_endline (fst k)
-	let _ = print_endline (snd k) *)
-
+	let src,dst = ("3","d"),("3","h")
+	let pieces = (pieces_in_way src dst brd)
+	TEST = (pieces=[pawn_white])
 
 end
 
