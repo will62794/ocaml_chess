@@ -19,7 +19,7 @@ open Chesstypes
 
 	-------- Black --------
 	18 28 38 48 58 68 78 88
-	17 27 37 47 57 67 77 7
+	17 27 37 47 57 67 77 87
 	16 26 36 46 56 66 76 86
 	15 25 35 45 55 65 75 85
 	14 24 34 44 54 64 74 84
@@ -91,17 +91,16 @@ let make_empty_board () : board =
 (* converts a boardpos into integer x,y board coordinates *)
 let boardpos_to_coords pos =
 	let (xstr,ystr) = pos in
-	(get_int_of_letter xstr,int_of_string ystr)
+	(get_int_of_letter ystr,int_of_string xstr)
 
 let coords_to_boardpos (x,y) =
-	(get_nth_letter x,string_of_int y)
+	(string_of_int x,get_nth_letter (y-1))
 
 (* (row,column) e.g. (5,a) *)
 let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
-	let row_index = int_of_string (fst (board_pos))-1 in
-	print_string (string_of_int (row_index));
-	let column_index = get_int_of_letter (snd board_pos)-1 in
-	print_string (string_of_int (column_index));
+	let pos_row,pos_col = board_pos in
+	let row_index = (int_of_string pos_row)-1 in
+	let column_index = (get_int_of_letter pos_col)-1 in
 	let row = snd (List.nth the_board row_index) in
 	let the_square = List.nth row column_index in
 	match the_square with
@@ -242,7 +241,7 @@ let get_piece (board:board) (board_pos:boardpos) =
 	| Some p -> p
 	| None -> failwith "No piece there"
 
-
+(*
 
 let _ =
 let new_board = make_init_board () in
@@ -275,3 +274,4 @@ let board = match (execute_move move new_board) with
 in
 display board ;
 
+*)
