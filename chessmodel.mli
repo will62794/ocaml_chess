@@ -48,4 +48,10 @@ val boardpos_to_coords: boardpos -> (int*int)
 (* converts integer x,y coordinates into boardpos format*)
 val coords_to_boardpos: (int*int) -> boardpos
 
+(* creates a new piece from given attributes *)
+val create_piece: string -> team -> string -> piecekind -> piece
+
+(* creates a new piece from given attributes and places it on board at given position *)
+val add_piece_to_board: board -> boardpos -> string -> team -> string -> piecekind -> unit
+
 
