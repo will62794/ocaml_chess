@@ -54,4 +54,10 @@ val create_piece: string -> team -> string -> piecekind -> piece
 (* creates a new piece from given attributes and places it on board at given position *)
 val add_piece_to_board: board -> boardpos -> string -> team -> string -> piecekind -> unit
 
+(* 
+	takes a board and reflects its coordinate labels horizontally and vertically 
+	physically, this would correspond to spinning the board around and viewing it from
+	your opponent's perspective
+*)
+val reflect_board_coords: board -> board 
 

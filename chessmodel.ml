@@ -86,7 +86,7 @@ let make_empty_row (num:int) : row =
 
 let make_empty_board () : board =
 	let unitlist = [();();();();();();();()] in
-	List.mapi (fun i () -> (string_of_int i,make_empty_row i)) unitlist
+	List.mapi (fun i () -> (string_of_int (i+1),make_empty_row i)) unitlist
 
 (* converts a boardpos into integer x,y board coordinates *)
 let boardpos_to_coords pos =
@@ -96,29 +96,39 @@ let boardpos_to_coords pos =
 let coords_to_boardpos (x,y) =
 	(string_of_int x,get_nth_letter (y-1))
 
+
+(* e.g. "1" -> "8", e.g. "3" -> "5" *)
+let invert_row_index row_str = 
+	let row_int = int_of_string row_str in
+	string_of_int((brd_size+1)-row_int)
+
+(* e.g. "a" -> "h", e.g. "b" -> "g" *)
+let invert_col_index col_str = 
+	let col_int = get_int_of_letter col_str in
+	get_nth_letter ((brd_size)-col_int)
+
+let reflect_board_row row = 
+	List.map (fun (col,sq) -> ((invert_col_index col),sq) ) row
+
+let reflect_board_coords brd =
+	List.map (fun (s,row) -> ((invert_row_index s),(reflect_board_row row))) brd
+
 (* (row,column) e.g. (5,a) *)
 let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
-	let pos_row,pos_col = board_pos in
-	let row_index = (int_of_string pos_row)-1 in
-	let column_index = (get_int_of_letter pos_col)-1 in
-	let row = snd (List.nth the_board row_index) in
-	let the_square = List.nth row column_index in
-	match the_square with
-	| (_,x) -> x
+	let row_str,col_str = board_pos in
+	let row = List.assoc row_str the_board in
+	List.assoc col_str row
 
 (* puts a piece p into a square sq *)
 let fill_square (sq:square) (p:piece) : square =
-	match sq with
-	| (board_pos, Some x) -> (board_pos, Some p)
-	| (board_pos, None) -> (board_pos, Some p)
-
+	let brd_pos = fst sq in
+	(brd_pos, Some p)
 
 let add_piece_to_board (board:board) (pos:boardpos) (id) (team) (name) (piecetype): unit =
-	let a1 = get_square_on_board pos board in
+	let square_ref = get_square_on_board pos board in
 	let new_piece = create_piece (id) (team) (name) (piecetype) in
-	let new_square = fill_square (!a1) (new_piece) in
-	a1:=new_square
-
+	let new_square = fill_square (!square_ref) (new_piece) in
+	square_ref:=new_square
 
 let make_init_board () =
 	let empty_board = make_empty_board () in
@@ -243,6 +253,20 @@ let get_piece (board:board) (board_pos:boardpos) =
 	match piece_option with
 	| Some p -> p
 	| None -> failwith "No piece there"
+
+
+TEST_MODULE "invert_board_coords" = struct
+
+	let indices = ["a";"b";"c";"d";"e";"f";"g";"h"]
+	let expected = ["h";"g";"f";"e";"d";"c";"b";"a"]
+	TEST = (List.map invert_col_index indices)=expected
+
+	let indices = ["1";"2";"3";"4";"5";"6";"7";"8"]
+	let expected = ["8";"7";"6";"5";"4";"3";"2";"1"]
+	TEST = (List.map invert_row_index indices)=expected
+
+end
+
 
 (*
 
