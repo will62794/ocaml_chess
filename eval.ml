@@ -17,6 +17,8 @@
 (* Notes to self: ask nate for pieces points
    remove positional points if piece is vulnerable?
    DETERMINE EARLY OR LATE GAME STATUS FOR KING'S POS POINTS
+   fix pos points bug
+   stop pawn promotion
  *)
 
 open Chessmodel
