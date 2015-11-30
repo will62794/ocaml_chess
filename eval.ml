@@ -60,7 +60,8 @@ let position_points (board: board) (move: move) : float =
   | (piece, src, dest) -> (get_pos_points piece dest true) +.
     (match get_piece board dest with
      | None -> 0.
-     | Some cap_piece -> get_pos_points cap_piece dest true)
+     | Some cap_piece -> get_pos_points cap_piece dest true) -.
+     get_pos_points piece src true
 
 let vulnerable_points (board: board) (move: move) : float =
   match move with
