@@ -11,3 +11,6 @@ let make_game () =
 		did_castle = (false,false); (* did_white_castle_yet, did_black_castle_yet *)
 		moved_pieces = [];
 	}
+
+let piece_moved_yet (p:piece) (g:game) = 
+	List.mem p g.moved_pieces
