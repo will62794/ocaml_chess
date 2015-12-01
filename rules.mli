@@ -21,4 +21,4 @@ val valid_move : move -> board -> bool
 (* Get all possible moves for piece on the board
  * as well as opponent's vulnerabilities
  *)
-val possible_movements: piece -> board-> (move list * piece list)
+val possible_movements: board-> (move list * piece list)
