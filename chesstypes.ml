@@ -30,13 +30,13 @@ type square = boardpos * piece option (* (position,piece); piece=None if the sua
 type row = (string * square ref) list (* (row #, list of squares) *)
 type board = (string * row) list
 
-(* type player = string
+type player = string
 
 type game = {
 	board: board;
-	players: player list;
+	players: player * player;
+	total_moves: int;
+	current_turn: team;
+	in_enpassant: (piece option) list;
+	did_castle: bool * bool; (* did_white_castle_yet, did_black_castle_yet *)
 }
-Represents the difficulty level invariant of 1 through 10. 1 being lowest ai difficulty. 10 being highest ai difficulty
-type difficulty_level = int
-
- *)
