@@ -25,6 +25,7 @@ open Chessmodel
 open Position_score
 open Chesstypes
 open Display
+open Rules
 
 (* multipliers representing the weighting of the 3 board eval factors;
  * to be adjusted in testing *)
@@ -64,29 +65,24 @@ let position_points (board: board) (move: move) : float =
      | Some cap_piece -> get_pos_points cap_piece dest true) -.
      get_pos_points piece src true
 
-let vulnerable_points (board: board) (move: move) : float =
-  match move with
-  | (piece, _, dest) -> 0.
-    (* if (is_vulnerable dest board)
-    then get_piece_val piece
-    else 0. *)
+let rec get_all_moves (pieces: piece list) (board: board) (acc: move list) =
+  match pieces with
+  | [] -> acc
+  | h::t -> get_all_moves t board (acc @ (possible_movements h board))
+
+(* pieces from op team, double check this func lol *)
+let vulnerable_points (board: board) (move: move) (pieces: piece list) : float =
+  let new_board = (match execute_move move board with
+                  | None -> failwith ""
+                  | Some x -> x) in
+  let all_moves = get_all_moves pieces new_board [] in
+  List.fold_left (fun acc p -> acc +. (get_piece_val p))
+                  0. (pieces_capturable_by_moves all_moves new_board)
 
 let misc_points (board: board) (move: move) : float = 0.
 
-let eval (board: board) (move: move) : float =
+let eval (board: board) (move: move) (pieces: piece list) : float =
   (capture_mult *. (capture_points board move)) +.
   (position_mult *. (position_points board move)) -.
-  (vulnerable_mult *. (vulnerable_points board move)) +.
+  (vulnerable_mult *. (vulnerable_points board move pieces)) +.
   (misc_mult *. (misc_points board move))
-
-let _ =
-let new_board = make_init_board () in
-(*piece * boardpos * boardpos*)
-(*boardpos = string * string*)
-let board_pos_1 = ("1", "c") in
-let board_pos_2 = ("7", "c") in
-let piece_1= (match get_piece new_board board_pos_1 with
-              | None -> failwith "aaa"
-              | Some x -> x) in
-let move= (piece_1 , board_pos_1 , board_pos_2) in
-Printf.printf "%f" (eval new_board move)
