@@ -124,13 +124,21 @@ let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
 	List.assoc col_str row
 
 (* returns a board as a single list of all square refs *)
-let flatten_board brd = 
+let flatten_board brd : (square ref) list = 
 	let _,board_rows = List.split brd in
 	let flattened_rows = List.map (fun r -> snd (List.split r)) board_rows in
 	List.flatten flattened_rows
 
+let piece_at_sq (sq:square) (pce:piece) = 
+	let (pos,p) = sq in
+	p=Some(pce)
+
 let find_piece_pos (pce:piece) (brd:board) = 
-	failwith ""
+	let flattened_brd = flatten_board brd in
+	try 
+		let found_square = (List.find (fun sq -> (piece_at_sq (!sq) pce)) flattened_brd) in
+		Some(fst(!found_square))
+	with Not_found -> None
 
 (* puts a piece p into a square sq *)
 let fill_square (sq:square) (p:piece) : square =
@@ -295,8 +303,18 @@ TEST_MODULE "board utilities" = struct
 	TEST = (coords_to_boardpos (1,8))=("8","a")
 
 	let brd = make_empty_board()
-	let flattened = flatten_board brd
-	let _ = List.iter (fun s-> print_boardpos(fst !s)) flattened
+	let pawn_white = { id="P1"; team=White; name="Pawn"; piecetype=Pawn; }
+	let bishop_white = { id="B1"; team=White; name="Bishop"; piecetype=Bishop; }
+
+	let _ = add_piece_to_board (brd) ("2", "c") ("P1") (White) ("Pawn") (Pawn)
+	
+	let found_pos = find_piece_pos pawn_white brd
+	TEST = (found_pos=Some("2","c"))
+	let found_pos = find_piece_pos bishop_white brd
+	TEST = (found_pos=None)
+
+	(* let flattened = flatten_board brd
+	let _ = List.iter (fun s-> print_boardpos(fst !s)) flattened *)
 
 end
 
