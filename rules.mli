@@ -12,15 +12,15 @@ open Chessmodel
 
 
 (*
-	Given a board, representing the current state of a game,
-	and a desired move determines whether that move is valid,
-	as governed by standard chess rules
+	Given a game and a desired move, determines whether that move is valid,
+	as governed by standard chess rules, and returns the validation type of that 
+	move, if valid
 *)
 val valid_move : move -> game -> move_validation
 
 (* 
 	Get all possible moves for piece on the board
-  	as well as opponent's vulnerabilities
+  	as well as opponent's vulnerabilities, given a game state
 *)
 val possible_movements: piece -> game -> move list
 
