@@ -31,8 +31,8 @@ type board = (string * row) list
 
 type move = piece * boardpos * boardpos  (* represents a physical move --> (piece, src, dest) *)
 type failtype = MovementImpossible | MoveError
-type movetype = Basic | Capture | EnPassant | Castling | PawnPromotion
-type move_validation = Valid of movetype | Invalid of failtype
+type movetype = Basic | Capture | EnPassant | CastlingLeft | CastlingRight | PawnPromotion
+type move_validation = Valid of movetype | Invalid of failtype 
 
 type player = string
 
@@ -43,4 +43,5 @@ type game = {
 	current_turn: team;
 	in_enpassant: (piece option) list;
 	did_castle: bool * bool; (* did_white_castle_yet, did_black_castle_yet *)
+	moved_pieces: piece list;
 }

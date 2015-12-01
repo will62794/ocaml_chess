@@ -9,4 +9,5 @@ let make_game () =
 		current_turn = White;
 		in_enpassant = [];
 		did_castle = (false,false); (* did_white_castle_yet, did_black_castle_yet *)
+		moved_pieces = [];
 	}
