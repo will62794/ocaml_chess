@@ -10,8 +10,8 @@ let diagonal_mvmt (x,y) (x',y') (near) (far) =
 	abs(dx)=abs(dy) && 
 	abs(dx)>=near && abs(dx)<=far
 
-(*  An orthogonal movement (up, left, right, or down) of a 
-	distance that falls in range [near,far] *)
+(* An orthogonal movement (up, left, right, or down) of a 
+ * distance that falls in range [near,far] *)
 let orthogonal_mvmt (x,y) (x',y') (near) (far)  =
  	let (dx,dy) =  ((x'-x),(y'-y)) in
 	(dx = 0 && abs(dy)>=near && abs(dy)<=far) ||
@@ -28,8 +28,6 @@ let bishop_mvmt (x,y) (x',y') =
 	diagonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let rook_mvmt (x,y) (x',y') = 
-(* 	Printf.printf "dx:%d\n" (x'-x);
-	Printf.printf "dy:%d\n" (y'-y); *)
  	orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let queen_mvmt (x,y) (x',y') = 
@@ -85,11 +83,9 @@ let piece_at_sq sq =
 	 | _,Some pce -> pce
 	 | _,None -> failwith "no piece"
 
-(* 
-	returns a list of the (x,y) positions that make up that path between start and end 
-	precondition: path can be made only diagonally or orthogonally.
-	does not include src and dst in the path  
-*)
+(* returns a list of the (x,y) positions that make up that path between start and end 
+ * precondition: path can be made only diagonally or orthogonally.
+ * note: does not include src and dst in the path  *)
 let rec path_between src dst =
 	let (srcx,srcy),(dstx,dsty) = src,dst in
 	let next_x,next_y = (min (srcx+1) dstx),(min (srcy+1) dsty) in
@@ -118,10 +114,10 @@ let move_collisions (m:move) (brd:board) : bool =
 
 (* 
 	Castling:
-		1. King moves 2 squares towards a rook to its right, and the rook moves to the square the king crossed over
-		2. May only be done if the king has never moved, the rook involved has never moved, the squares b/w
-			the rook and king are not occupied
-	-treat castling as a king move
+	a. 	King moves 2 squares towards a rook to its right, and the rook moves to the square the king crossed over
+	b. 	May only be done if the king has never moved, the rook involved has never moved, the squares b/w
+		the rook and king are not occupied
+	-> treat castling as a king move
 *)
 let detect_castling (m:move) (g:game) : bool =
 	let (p,src,dst) = m in
@@ -187,10 +183,8 @@ let sq_to_coords (sq:square):int*int =
 	let pos,pce = sq in
 	boardpos_to_coords pos
 
-(* 
-	given a piece and its position, determine what squares in this row the piece could move to
-	in other words, what positions in this row satisfy the pieces rule requirements
-*)
+(* given a piece and its position, determine what squares in this row the piece could move to.
+ * In other words, what positions in this row satisfy the pieces rule requirements  *)
 let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): move list = 
 	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in
 	let make_piece_move dst = (p,pos,dst) in
@@ -219,11 +213,13 @@ let pieces_capturable_by_moves (moves:move list) (brd:board) : piece list =
 	let capturable_sqs = List.map (fun (p,s,d) -> !(get_square_on_board d brd)) capture_moves in
 	List.map piece_at_sq capturable_sqs
 
-(* ------------------------------------------------------------ *)
-(* ------------------------------------------------------------ *)
-(* ------ TESTS ----------------------------------------------- *)
-(* ------------------------------------------------------------ *)
-(* ------------------------------------------------------------ *)
+
+
+(* ---------------------------------------------------------------------------- *)
+(* ---------------------------------------------------------------------------- *)
+(* ----------------------- TESTS ---------------------------------------------- *)
+(* ---------------------------------------------------------------------------- *)
+(* ---------------------------------------------------------------------------- *)
 
 TEST_MODULE "piece_movement_rule_tests" = struct
 
