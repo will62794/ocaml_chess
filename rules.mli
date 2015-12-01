@@ -18,7 +18,14 @@ open Chessmodel
 *)
 val valid_move : move -> board -> bool
 
-(* Get all possible moves for piece on the board
- * as well as opponent's vulnerabilities
- *)
-val possible_movements: board-> (move list * piece list)
+(* 
+	Get all possible moves for piece on the board
+  	as well as opponent's vulnerabilities
+*)
+val possible_movements: piece -> board-> move list
+
+(* 
+	Given a list of valid moves, determines all of the opponent pieces that would are capturable
+ 	by those moves. Assumes that all of the moves in move list are moves of the same piece
+*)
+val pieces_capturable_by_moves: move list -> board -> piece list

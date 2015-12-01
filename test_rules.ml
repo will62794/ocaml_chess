@@ -1,6 +1,12 @@
 open Chesstypes
 open Chessmodel
 open Rules
+open Demoboards
+open Util
+
+let print_mvmts mvmts = 
+	let _ = List.iter (fun (p,s,d) -> print_boardpos d) mvmts in
+	print_endline ""
 
 TEST_MODULE "valid_move basic piece moves" = struct
 	(* Basic Pawn Moves *)
@@ -104,6 +110,50 @@ TEST_MODULE "valid_move with collisions" = struct
 	TEST = ((valid_move (rook_white,("1","c"),("6","c")) brd)=false)
 	TEST = ((valid_move (rook_white,("1","c"),("8","c")) brd)=false)
 end
+
+TEST_MODULE "possible_movements" = struct
+
+
+	let pawn_white = { id="P1"; team=White; name="Pawn"; piecetype=Pawn; }
+	let bishop_white = { id="B1"; team=White; name="Bishop"; piecetype=Bishop; }
+	let queen_white = { id="Q1"; team=White; name="Queen"; piecetype=Queen; }
+	let rook_white = { id="R1"; team=White; name="Rook"; piecetype=Rook; }
+
+ 	(* Pawn *)
+	let brd = make_empty_board()
+	let _ = add_piece_to_board (brd) ("2", "c") ("P1") (White) ("Pawn") (Pawn) 
+	
+	let mvmts = possible_movements pawn_white brd
+	let _ = List.iter (fun (p,s,d) -> print_boardpos d) mvmts
+	TEST = (List.length mvmts)=1
+	TEST = (mvmts=[(pawn_white,("2","c"),("3","c"))])
+
+ 	(* Bishop *)
+	let brd = make_empty_board()
+	let _ = add_piece_to_board (brd) ("2", "c") ("B1") (White) ("Bishop") (Bishop) 
+	let mvmts = possible_movements bishop_white brd
+	let _ = print_mvmts mvmts
+	TEST = (List.length mvmts)=9
+
+
+end
+
+TEST_MODULE "pieces_capturable_by_moves" = struct
+
+	let board1 = demo_board_simple_1()
+
+	let queen = { id="Q1"; team=White; name="Queen"; piecetype=Queen; }
+	let mvmts = possible_movements queen board1
+	let _ = print_endline "Queen Mvmts:"
+	let _ = print_mvmts mvmts
+	(* TEST = (List.length mvmts)=15 *)
+	let vulnerable_pcs = pieces_capturable_by_moves mvmts board1
+	let _ = List.iter print_piece vulnerable_pcs 
+(* 	let _ = print_int (List.length vulnerable_pcs)
+ *)	TEST = (List.length vulnerable_pcs)=1
+
+end
+
 
 
 

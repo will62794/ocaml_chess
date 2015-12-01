@@ -17,8 +17,8 @@ let diagonal_mvmt (x,y) (x',y') (near) (far) =
 	distance that falls in range [near,far] *)
 let orthogonal_mvmt (x,y) (x',y') (near) (far)  =
  	let (dx,dy) =  ((x'-x),(y'-y)) in
-	(dx = 0 && dy>=near && dy<=far) ||
-	(dy = 0 && dx>=near && dx<=far)	
+	(dx = 0 && abs(dy)>=near && abs(dy)<=far) ||
+	(dy = 0 && abs(dx)>=near && abs(dx)<=far)	
 
 let pawn_mvmt (x,y) (x',y') = 
 	(x'-x,y'-y) = (0,1)
@@ -36,8 +36,8 @@ let rook_mvmt (x,y) (x',y') =
  	orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size
 
 let queen_mvmt (x,y) (x',y') = 
-	diagonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size ||
-	orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size 
+	(diagonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size) ||
+	(orthogonal_mvmt (x,y) (x',y') 1 Chesstypes.brd_size) 
 
 let king_mvmt (x,y) (x',y') = 
 	orthogonal_mvmt (x,y) (x',y') 1 1 || 
@@ -72,7 +72,13 @@ let movement_rule (m:move) (b:board) : bool =
 
 
 (*  ---   Collision Detection  ---  *)
-		
+	
+let piece_at_sq sq = 
+	let (pos,p)=sq in
+	match (pos,p) with
+	 | _,Some pce -> pce
+	 | _,None -> failwith "no piece"
+
 (* 
 	returns a list of the (x,y) positions that make up that path between start and end 
 	precondition: path can be made only diagonally or orthogonally.
@@ -93,12 +99,6 @@ let pieces_in_way (src:boardpos) (dest:boardpos) (brd:board) : piece list =
 	(* let () = List.iter (fun (x,y) -> (Printf.printf "%s,%s\n" x y)) path in *)
 	let sqs = List.map (fun pos -> !(get_square_on_board pos brd)) path in
 	let occupied_sqs = List.filter (fun (pos,p) -> p<>None) sqs in
-	let piece_at_sq sq = 
-		let (pos,p)=sq in
-		match (pos,p) with
-		 | _,Some pce -> pce
-		 | _,None -> failwith "no piece" 
-	in
 	(* let () = print_endline "" in *)
 	(* let () = List.iter (fun p -> print_endline p.name) (List.map piece_at_sq occupied_sqs) in *)
 	List.map piece_at_sq occupied_sqs
@@ -118,8 +118,6 @@ let is_vulnerable_pos pos brd =
 
 let is_vulnerable p brd = 
 	false
-
-
 
 
 (* 
@@ -143,9 +141,6 @@ let detect_special_move (m:move) (brd:board) =
 let handle_special_move (m:move) (brd:board) = 
 	false
 
-
-(* let _ = Printf.printf "%b\n" (move_collisions m brd) in  *)
-
 let valid_move (m:move) (brd:board) : bool =
 	if detect_special_move m brd then handle_special_move m brd (* dummy for now *)
 	else	
@@ -153,9 +148,49 @@ let valid_move (m:move) (brd:board) : bool =
 		movement_rule m brd &&
 		not (move_collisions m brd)
 
-let possible_movements (p:piece) (brd:board) : (move list) * (piece list) = 
-	failwith "possible_movements unimplemented"
 
+(* --- Possible Moves for Piece (Inverse Rule Calculations) --- *)
+
+let sq_to_coords (sq:square):int*int = 
+	let pos,pce = sq in
+	boardpos_to_coords pos
+
+(* 
+	given a piece and its position, determine what squares in this row the piece could move to
+	in other words, what positions in this row satisfy the pieces rule requirements
+*)
+let piece_moves_in_row (p:piece) (pos:boardpos) (brd:board) (r:row): move list = 
+	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in
+	let make_piece_move dst = (p,pos,dst) in
+	let validate_pce_move pos = (valid_move (make_piece_move pos) brd) in
+	let move_positions = List.filter (fun pos -> (validate_pce_move pos)) sq_positions in
+	List.map (fun pos -> make_piece_move pos) move_positions
+
+
+let possible_movements (p:piece) (brd:board) : move list = 
+	let piece_pos = 
+		match find_piece_pos p brd with
+		 | Some pos -> pos
+		 | None -> failwith "PieceNotFound" 
+	in
+	let _,board_rows = List.split brd in
+	let row_moves = List.map (piece_moves_in_row p piece_pos brd) board_rows in
+	List.flatten row_moves
+
+(* is the given square capturable by the given move *)
+let is_capture_move (brd:board) (m:move) =
+	let (src_piece,src,dst) = m in
+	let _,dst_piece = !(get_square_on_board dst brd) in
+	match dst_piece with
+		| None -> false
+		| Some p -> 
+			if p.team<>src_piece.team then true (* can only capture opponent piece *)
+			else false
+
+let pieces_capturable_by_moves (moves:move list) (brd:board) : piece list = 
+	let capture_moves = List.filter (is_capture_move brd) moves in
+	let capturable_sqs = List.map (fun (p,s,d) -> !(get_square_on_board d brd)) capture_moves in
+	List.map piece_at_sq capturable_sqs
 
 (* ------------------------------------------------------------ *)
 (* ------------------------------------------------------------ *)
@@ -164,6 +199,13 @@ let possible_movements (p:piece) (brd:board) : (move list) * (piece list) =
 (* ------------------------------------------------------------ *)
 
 TEST_MODULE "piece_movement_rule_tests" = struct
+
+	TEST = (orthogonal_mvmt (3,3) (3,4) 1 Chesstypes.brd_size)=true
+	TEST = (orthogonal_mvmt (3,3) (3,2) 1 Chesstypes.brd_size)=true
+	TEST = (orthogonal_mvmt (3,3) (3,1) 1 Chesstypes.brd_size)=true
+	TEST = (orthogonal_mvmt (3,3) (4,3) 1 Chesstypes.brd_size)=true
+	TEST = (orthogonal_mvmt (3,3) (2,3) 1 Chesstypes.brd_size)=true
+
 
 	(* Pawn *)
 	TEST = (pawn_mvmt (3,3) (3,4))=true
@@ -187,6 +229,11 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 	(* Rook *)
 	TEST = (rook_mvmt (3,3) (6,3))=true
 	TEST = (rook_mvmt (0,0) (0,5))=true
+	TEST = (rook_mvmt (1,5) (1,4))=true
+	TEST = (rook_mvmt (1,5) (1,3))=true
+	TEST = (rook_mvmt (1,5) (1,2))=true
+	TEST = (rook_mvmt (1,5) (1,1))=true
+
 
 	(* Bishop *)
 	TEST = (bishop_mvmt (3,3) (6,6))=true
@@ -200,6 +247,10 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 	TEST = (queen_mvmt (3,3) (7,3))=true
 	TEST = (queen_mvmt (3,3) (1,1))=true
 	TEST = (queen_mvmt (3,3) (6,3))=true
+	TEST = (queen_mvmt (1,5) (1,4))=true
+	TEST = (queen_mvmt (1,5) (1,3))=true
+	TEST = (queen_mvmt (1,5) (1,2))=true
+	TEST = (queen_mvmt (1,5) (1,1))=true
 	TEST = (queen_mvmt (3,3) (5,4))=false
 
 	(* King *)
