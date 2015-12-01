@@ -177,7 +177,7 @@ let possible_movements (p:piece) (brd:board) : move list =
 	let row_moves = List.map (piece_moves_in_row p piece_pos brd) board_rows in
 	List.flatten row_moves
 
-(* is the given square capturable by the given move *)
+(* is the move a capture move *)
 let is_capture_move (brd:board) (m:move) =
 	let (src_piece,src,dst) = m in
 	let _,dst_piece = !(get_square_on_board dst brd) in
