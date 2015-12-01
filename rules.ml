@@ -202,7 +202,7 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 
 	TEST = (orthogonal_mvmt (3,3) (3,4) 1 Chesstypes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (3,2) 1 Chesstypes.brd_size)=true
-	TEST = (orthogonal_mvmt (3,3) (3,1) 1 Chesstypes.brd_size)=true
+	TEST = (orthogonal_mvmt (3,3) (3,1) 1 Chesstygpes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (4,3) 1 Chesstypes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (2,3) 1 Chesstypes.brd_size)=true
 
