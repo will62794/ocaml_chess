@@ -123,6 +123,9 @@ let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
 	let row = List.assoc row_str the_board in
 	List.assoc col_str row
 
+let find_piece_pos (pce:piece) (brd:board) = 
+	failwith ""
+
 (* puts a piece p into a square sq *)
 let fill_square (sq:square) (p:piece) : square =
 	let brd_pos = fst sq in
