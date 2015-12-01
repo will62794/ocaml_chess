@@ -86,7 +86,7 @@ let make_empty_row (num:int) : row =
 
 let make_empty_board () : board =
 	let unitlist = [();();();();();();();()] in
-	List.mapi (fun i () -> (string_of_int (i+1),make_empty_row i)) unitlist
+	List.mapi (fun i () -> (string_of_int (i+1),make_empty_row (i+1))) unitlist
 
 (* converts a boardpos into integer x,y board coordinates *)
 let boardpos_to_coords pos =
@@ -122,6 +122,12 @@ let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
 	let row_str,col_str = board_pos in
 	let row = List.assoc row_str the_board in
 	List.assoc col_str row
+
+(* returns a board as a single list of all square refs *)
+let flatten_board brd = 
+	let _,board_rows = List.split brd in
+	let flattened_rows = List.map (fun r -> snd (List.split r)) board_rows in
+	List.flatten flattened_rows
 
 let find_piece_pos (pce:piece) (brd:board) = 
 	failwith ""
@@ -266,6 +272,10 @@ let get_piece (board:board) (board_pos:boardpos) =
 (* -------- TESTS ----------- *)
 (* ---------------------------*)
 
+let print_boardpos brdpos = 
+	let (r,c) = brdpos in 
+	(Printf.printf "(%s,%s)\n" r c)
+
 TEST_MODULE "invert_board_coords" = struct
 
 	let indices = ["a";"b";"c";"d";"e";"f";"g";"h"]
@@ -280,11 +290,17 @@ TEST_MODULE "invert_board_coords" = struct
 
 end
 
-TEST_MODULE "test coordinate utilities" = struct
+TEST_MODULE "board utilities" = struct
 	TEST = (coords_to_boardpos (3,6))=("6","c")
 	TEST = (coords_to_boardpos (1,8))=("8","a")
 
+	let brd = make_empty_board()
+	let flattened = flatten_board brd
+	let _ = List.iter (fun s-> print_boardpos(fst !s)) flattened
+
 end
+
+
 
 
 (*
