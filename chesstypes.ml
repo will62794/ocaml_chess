@@ -25,10 +25,14 @@ type piece = {
 	}
 
 type boardpos = string * string (* (row,column) e.g. (5,a) *)
-type move = piece * boardpos * boardpos  (* represents a PHYSICAL move --> (piece, src, dest) *)
 type square = boardpos * piece option (* (position,piece); piece=None if the suare is empty *)
 type row = (string * square ref) list (* (row #, list of squares) *)
 type board = (string * row) list
+
+type move = piece * boardpos * boardpos  (* represents a physical move --> (piece, src, dest) *)
+type failtype = MovementImpossible | MoveError
+type movetype = Basic | Capture | EnPassant | Castling | PawnPromotion
+type move_validation = Valid of movetype | Invalid of failtype
 
 type player = string
 

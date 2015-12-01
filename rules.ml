@@ -1,9 +1,6 @@
 open Chesstypes 
 open Chessmodel
 
-type failtype = MovementImpossible | Disallowed
-type validation = Valid | Invalid of failtype
-type specialmove = EnPassant | Castling | PawnPromotion
 
 (*  ---   Movement Rules  ---  *)
 
@@ -70,6 +67,15 @@ let movement_rule (m:move) (b:board) : bool =
 	let mvmt_rule = (List.assoc piece.piecetype mvmt_rules) in
 	(mvmt_rule (src) (dst))
 
+(* is the move a capture move *)
+let is_capture_move (brd:board) (m:move) =
+	let (src_piece,src,dst) = m in
+	let _,dst_piece = !(get_square_on_board dst brd) in
+	match dst_piece with
+		| None -> false
+		| Some p -> 
+			if p.team<>src_piece.team then true (* can only capture opponent piece *)
+			else false
 
 (*  ---   Collision Detection  ---  *)
 	
@@ -110,45 +116,71 @@ let move_collisions (m:move) (brd:board) : bool =
 	(* let () = print_endline (string_of_bool ((List.length collisions)>0)) in *)
 	(List.length collisions)>0
 
-let is_vulnerable_move m brd = 
-	false
-
-let is_vulnerable_pos pos brd = 
-	false
-
-let is_vulnerable p brd = 
-	false
-
-
 (* 
 	Castling:
-		1. King moves 2 squares towards a rook, and the rook moves to the square the king crossed over
-		2. May only be done if the king has never moved, the rook involved has never moved, the suares b/w
+		1. King moves 2 squares towards a rook to its right, and the rook moves to the square the king crossed over
+		2. May only be done if the king has never moved, the rook involved has never moved, the squares b/w
 			the rook and king are not occupied
+	-treat castling as a king move
 *)
-let detect_castling (m:move) (brd:board) =
-	failwith ""
+let detect_castling (m:move) (g:game) : bool =
+	let (p,src,dst) = m in
+	let (x,y),(x',y') = (boardpos_to_coords src),(boardpos_to_coords dst) in 
+	let king_dx = if (p.team = White) then 2 else -2 in
+	let conditions = [
+		p.piecetype = King;
+		(y'=y);
+		(x'-x)=king_dx
+	] in
+	List.fold_left (&&) true conditions
 
-let detect_en_passant (m:move) (brd:board) = 
-	failwith ""
 
-let detect_pawn_promotion (m:move) (brd:board) = 
-	failwith ""
-
-let detect_special_move (m:move) (brd:board) = 
+let detect_en_passant (m:move) (g:game) : bool = 
 	false
 
-let handle_special_move (m:move) (brd:board) = 
+let detect_pawn_promotion (m:move) (g:game) : bool = 
 	false
 
-let valid_move (m:move) (brd:board) : bool =
-	if detect_special_move m brd then handle_special_move m brd (* dummy for now *)
-	else	
-		inbounds_rule m &&
-		movement_rule m brd &&
+let detect_special_move (m:move) (g:game) : bool = 
+	let detectors = [
+			(detect_castling m g); 
+			(detect_en_passant m g); 
+			(detect_pawn_promotion m g)
+		] in
+	List.fold_left (||) false detectors
+
+(* assumes that the incoming move is a special move *)
+let handle_special_move (m:move) (g:game) : move_validation = 
+	if (detect_castling m g) then Valid(Castling)
+	else if (detect_en_passant m g) then Valid(EnPassant)
+	else if (detect_pawn_promotion m g) then Valid(PawnPromotion)
+	else Invalid(MoveError)
+
+let handle_normal_move (m:move) (g:game) : move_validation = 
+	let brd = g.board in
+	(* must pass all rules *)
+	let mvmt_conds = [
+		inbounds_rule m;
+		movement_rule m brd;
 		not (move_collisions m brd)
+	] in
+	let passed = List.fold_left (&&) true mvmt_conds in
+	if passed then 
+		if (is_capture_move brd m) then 
+			Valid(Capture)
+		else 
+			Valid(Basic)
+	else 
+		Invalid(MovementImpossible)
 
+let valid_move (m:move) (the_game:game) : move_validation =
+	let special_move = detect_special_move m the_game in
+	if special_move then 
+		handle_special_move m the_game (* Special Move *)
+	else
+		handle_normal_move m the_game
 
+		
 (* --- Possible Moves for Piece (Inverse Rule Calculations) --- *)
 
 let sq_to_coords (sq:square):int*int = 
@@ -159,33 +191,28 @@ let sq_to_coords (sq:square):int*int =
 	given a piece and its position, determine what squares in this row the piece could move to
 	in other words, what positions in this row satisfy the pieces rule requirements
 *)
-let piece_moves_in_row (p:piece) (pos:boardpos) (brd:board) (r:row): move list = 
+let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): move list = 
 	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in
 	let make_piece_move dst = (p,pos,dst) in
-	let validate_pce_move pos = (valid_move (make_piece_move pos) brd) in
+	let validate_pce_move pos = 
+		match (valid_move (make_piece_move pos) g) with
+		 | Valid t -> true
+		 | Invalid t -> false 
+	in
 	let move_positions = List.filter (fun pos -> (validate_pce_move pos)) sq_positions in
 	List.map (fun pos -> make_piece_move pos) move_positions
 
 
-let possible_movements (p:piece) (brd:board) : move list = 
+let possible_movements (p:piece) (g:game) : move list = 
+	let brd = g.board in
 	let piece_pos = 
 		match find_piece_pos p brd with
 		 | Some pos -> pos
 		 | None -> failwith "PieceNotFound" 
 	in
 	let _,board_rows = List.split brd in
-	let row_moves = List.map (piece_moves_in_row p piece_pos brd) board_rows in
+	let row_moves = List.map (piece_moves_in_row p piece_pos g) board_rows in
 	List.flatten row_moves
-
-(* is the move a capture move *)
-let is_capture_move (brd:board) (m:move) =
-	let (src_piece,src,dst) = m in
-	let _,dst_piece = !(get_square_on_board dst brd) in
-	match dst_piece with
-		| None -> false
-		| Some p -> 
-			if p.team<>src_piece.team then true (* can only capture opponent piece *)
-			else false
 
 let pieces_capturable_by_moves (moves:move list) (brd:board) : piece list = 
 	let capture_moves = List.filter (is_capture_move brd) moves in
@@ -202,7 +229,7 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 
 	TEST = (orthogonal_mvmt (3,3) (3,4) 1 Chesstypes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (3,2) 1 Chesstypes.brd_size)=true
-	TEST = (orthogonal_mvmt (3,3) (3,1) 1 Chesstygpes.brd_size)=true
+	TEST = (orthogonal_mvmt (3,3) (3,1) 1 Chesstypes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (4,3) 1 Chesstypes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (2,3) 1 Chesstypes.brd_size)=true
 

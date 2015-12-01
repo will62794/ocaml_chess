@@ -16,13 +16,13 @@ open Chessmodel
 	and a desired move determines whether that move is valid,
 	as governed by standard chess rules
 *)
-val valid_move : move -> board -> bool
+val valid_move : move -> game -> move_validation
 
 (* 
 	Get all possible moves for piece on the board
   	as well as opponent's vulnerabilities
 *)
-val possible_movements: piece -> board-> move list
+val possible_movements: piece -> game -> move list
 
 (* 
 	Given a list of valid moves, determines all of the opponent pieces that would are capturable
