@@ -11,15 +11,25 @@ let print_mvmts mvmts =
 
 (* Test Pieces *)
 let pawn_white_1 = { id="P1"; team=White; name="Pawn"; piecetype=Pawn; }
+let pawn_white_2 = { id="P2"; team=White; name="Pawn"; piecetype=Pawn; }
+let pawn_white_3 = { id="P3"; team=White; name="Pawn"; piecetype=Pawn; }
+let pawn_white_4 = { id="P4"; team=White; name="Pawn"; piecetype=Pawn; }
+
 let knight_white_1 = { id="K1"; team=White; name="Knight"; piecetype=Knight; }
+let knight_white_2 = { id="K2"; team=White; name="Knight"; piecetype=Knight; }
 let bishop_white_1 = { id="B1"; team=White; name="Bishop"; piecetype=Bishop; }
 let rook_white_1 = { id="R1"; team=White; name="Rook"; piecetype=Rook; }
-let queen_white_1 = { id="Q1"; team=White; name="Queen"; piecetype=Queen; }
-let king_white_1 = { id="K1"; team=White; name="King"; piecetype=King; }
+let rook_white_2 = { id="R2"; team=White; name="Rook"; piecetype=Rook; }
+let queen_white_1 = { id="Q"; team=White; name="Queen"; piecetype=Queen; }
+let king_white_1 = { id="K"; team=White; name="King"; piecetype=King; }
 
 let pawn_black_1 = { id="P1"; team=Black; name="Pawn"; piecetype=Pawn; }
 let pawn_black_3 = { id="P3"; team=Black; name="Pawn"; piecetype=Pawn; }
-
+let knight_black_1 = { id="K1"; team=Black; name="Knight"; piecetype=Knight; }
+let bishop_black_1 = { id="B1"; team=Black; name="Bishop"; piecetype=Bishop; }
+let rook_black_1 = { id="R1"; team=Black; name="Rook"; piecetype=Rook; }
+let queen_black_1 = { id="Q"; team=Black; name="Queen"; piecetype=Queen; }
+let king_black_1 = { id="K"; team=Black; name="King"; piecetype=King; }
 
 TEST_MODULE "valid_move basic piece moves" = struct
 	(* Basic Pawn Moves *)
@@ -68,8 +78,8 @@ TEST_MODULE "valid_move basic piece moves" = struct
 
 	(* Basic Queen Moves *)
 	let g = make_empty_game()
-	let queen_white = { id="Q1"; team=White; name="Queen"; piecetype=Queen; }
-	let _ = add_piece_to_board (g.board) ("3", "d") ("Q1") (White) ("Queen") (Queen)
+	let queen_white = { id="Q"; team=White; name="Queen"; piecetype=Queen; }
+	let _ = add_piece_to_board (g.board) ("3", "d") ("Q") (White) ("Queen") (Queen)
 
 	TEST = ((valid_move (queen_white_1,("3","d"),("8","d")) g)=Valid(Basic))
 	TEST = ((valid_move (queen_white_1,("3","d"),("6","g")) g)=Valid(Basic))
@@ -77,13 +87,14 @@ TEST_MODULE "valid_move basic piece moves" = struct
 
 	(* Basic King Moves *)
 	let g = make_empty_game()
-	let _ = add_piece_to_board (g.board) ("3", "d") ("K1") (White) ("King") (King)
+	let _ = add_piece_to_board (g.board) ("3", "d") ("K") (White) ("King") (King)
 
 	TEST = ((valid_move (king_white_1,("3","d"),("4","d")) g)=Valid(Basic))
 	TEST = ((valid_move (king_white_1,("3","d"),("4","e")) g)=Valid(Basic))
 	TEST = ((valid_move (king_white_1,("3","d"),("8","d")) g)=Invalid(MovementImpossible))
 
 end
+
 
 TEST_MODULE "valid_move with collisions" = struct
 	
@@ -103,9 +114,9 @@ TEST_MODULE "valid_move with collisions" = struct
 	TEST = ((valid_move (rook_white_1,("1","c"),("6","c")) g)=Invalid(MovementImpossible))
 	TEST = ((valid_move (rook_white_1,("1","c"),("8","c")) g)=Invalid(MovementImpossible))
 
-	TEST = ((valid_move (pawn_black_3,("5","c"),("3","c")) g)=Valid(Basic))
-	TEST = ((valid_move (pawn_black_3,("5","c"),("2","c")) g)=Invalid(MovementImpossible))
-	TEST = ((valid_move (pawn_black_3,("5","c"),("1","c")) g)=Invalid(MovementImpossible))
+ 	TEST = ((valid_move (pawn_black_1,("5","c"),("3","c")) g)=Valid(Basic))
+	TEST = ((valid_move (pawn_black_1,("5","c"),("2","c")) g)=Invalid(MovementImpossible))
+	TEST = ((valid_move (pawn_black_1,("5","c"),("1","c")) g)=Invalid(MovementImpossible))
 
 	let _ = add_piece_to_board (g.board) ("1", "f") ("P1") (White) ("Pawn") (Pawn) 
 
@@ -114,44 +125,80 @@ TEST_MODULE "valid_move with collisions" = struct
 	TEST = ((valid_move (pawn_white_1,("1","f"),("4","f")) g)=Invalid(MovementImpossible))
 	TEST = ((valid_move (pawn_white_1,("1","f"),("5","f")) g)=Invalid(MovementImpossible))
 	TEST = ((valid_move (pawn_white_1,("1","f"),("6","f")) g)=Invalid(MovementImpossible))
-	TEST = ((valid_move (pawn_white_1,("1","f"),("7","f")) g)=Invalid(MovementImpossible))
-	TEST = ((valid_move (pawn_white_1,("1","f"),("8","f")) g)=Invalid(MovementImpossible))
+	TEST = ((valid_move (pawn_white_1,("1","f"),("7","f")) g)=Invalid(MovementImpossible)) 
 
+	TEST = ((valid_move (pawn_white_1,("1","f"),("8","f")) g)=Invalid(MovementImpossible))
+	TEST = ((valid_move (pawn_white_1,("1","f"),("9","f")) g)=Invalid(MovementImpossible))
+ 
 end
+
+(* let _ = print_endline "\nQueen White 1 Mvmts:" *)
+(* 	let _ = print_mvmts mvmts
+let _ = print_int (List.length(mvmts)) *)
 
 TEST_MODULE "possible_movements" = struct
 
+	(* --- demo_board_simple_1 --- *)
 	let board_1 = demo_board_simple_1()
 	let a_game = {make_empty_game() with board=board_1}
 
+	(* Pawn Black 1 *)
 	let mvmts = (possible_movements pawn_black_1 a_game)
-	let _ = print_endline "\nPawn Black 1 Mvmts:"
-	let _ = print_mvmts mvmts
-
-(* failing tests, must fix
 	TEST = (List.length mvmts)=2
 	TEST = (mvmts=[
 			(pawn_black_1,("5","c"),("3","c"));
 			(pawn_black_1,("5","c"),("4","c"))
-		])  *)
-
+		]) 
+	(* Queen White 1 *)
 	let mvmts = (possible_movements queen_white_1 a_game)
-	let _ = print_endline "\nQueen White 1 Mvmts:"
-	let _ = print_mvmts mvmts
 	TEST = (List.length mvmts)=14
-
+	(* Bishop White 1 *)
 	let mvmts = (possible_movements bishop_white_1 a_game)
-	let _ = print_mvmts mvmts 
 	TEST = (List.length mvmts)=8
 
- 	(* Bishop *)
-(* 	let g = make_empty_game()
-	let _ = add_piece_to_board (g.board) ("2", "c") ("B1") (White) ("Bishop") (Bishop) 
-	let mvmts = possible_movements bishop_white_1 g
-	(* let _ = print_mvmts mvmts *)
-	TEST = (List.length mvmts)=9 *)
+	(* --- full_board --- *)
+	let board_full = make_init_board()
+	let a_game = {make_empty_game() with board=board_full}
+		
+	(* Pawns - 2 initial moves *)
+	let mvmts = (possible_movements pawn_white_1 a_game)
+	TEST = (List.length mvmts)=2
+	let mvmts = (possible_movements pawn_black_1 a_game)
+	TEST = (List.length mvmts)=2
+	let mvmts = (possible_movements pawn_white_3 a_game)
+	TEST = (List.length mvmts)=2
 
+	(* Queens - 0 initial moves *)
+	let mvmts = (possible_movements queen_white_1 a_game)
+	TEST = (List.length mvmts)=0
+	let mvmts = (possible_movements queen_black_1 a_game)
+	TEST = (List.length mvmts)=0
 
+	(* Knights - 0 initial moves *)
+	let mvmts = (possible_movements knight_white_1 a_game)
+	TEST = (List.length mvmts)=2 
+	let mvmts = (possible_movements knight_white_2 a_game)
+	TEST = (List.length mvmts)=2
+
+	(* Bishops - 0 initial moves *)
+	let mvmts = (possible_movements bishop_white_1 a_game)
+	TEST = (List.length mvmts)=0
+
+	(* --- demo_board_dense_1 --- *)
+	let board_dense_1 = demo_board_dense_1()
+	let a_game = {make_empty_game() with board=board_dense_1}
+
+	let mvmts = (possible_movements pawn_white_1 a_game)
+	TEST = (List.length mvmts)=2
+
+	let mvmts = (possible_movements queen_white_1 a_game)
+	TEST = (List.length mvmts)=16
+
+	let mvmts = (possible_movements rook_white_1 a_game)
+	TEST = (List.length mvmts)=14
+
+	let mvmts = (possible_movements rook_white_2 a_game)
+	TEST = (List.length mvmts)=10
 end
 
 TEST_MODULE "pieces_capturable_by_moves" = struct
@@ -160,15 +207,14 @@ TEST_MODULE "pieces_capturable_by_moves" = struct
 	let g = {make_empty_game() with board=board_1}
 
 	let mvmts = possible_movements queen_white_1 g
-	(* let _ = print_endline "Queen Mvmts:" *)
-	(* let _ = print_mvmts mvmts *)
-	(* TEST = (List.length mvmts)=15 *)
+
 	let vulnerable_pcs = pieces_capturable_by_moves mvmts board_1
-	(* let _ = List.iter print_piece vulnerable_pcs  *)
-(* 	let _ = print_int (List.length vulnerable_pcs)
- *)	TEST = (List.length vulnerable_pcs)=1
+	TEST = (List.length vulnerable_pcs)=1
 
 end
+
+Pa_ounit_lib.Runtime.summarize ()
+
 
 
 

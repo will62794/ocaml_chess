@@ -1,6 +1,8 @@
 open Chesstypes 
 open Chessmodel
 open Game
+open Demoboards
+open Util
 
 type direction = Left | Right
 
@@ -178,8 +180,10 @@ let piece_at_sq sq =
  * note: does not include src and dst in the path  *)
 let rec path_between src dst =
 	let (srcx,srcy),(dstx,dsty) = src,dst in
-	let next_x,next_y = (min (srcx+1) dstx),(min (srcy+1) dsty) in
-	if (next_x,next_y)=dst 
+	let step_dir k = (if k=0 then 0 else k/abs(k)) in
+	let x_step,y_step = step_dir(dstx-srcx),step_dir(dsty-srcy) in (* step towards dest in x & y *)
+	let next_x,next_y = (srcx+x_step),(srcy+y_step) in
+	if (next_x,next_y)=dst (* terminate if dst reached *)
 		then []
 	else 
 		(next_x,next_y)::(path_between (next_x,next_y) dst)
@@ -195,12 +199,16 @@ let pieces_in_way (src:boardpos) (dest:boardpos) (brd:board) : piece list =
 	(* let () = List.iter (fun p -> print_endline p.name) (List.map piece_at_sq occupied_sqs) in *)
 	List.map piece_at_sq occupied_sqs
 
-(* returns bool determining if executing the given move would collide with other pieces *)
+(* returns bool determining if executing the given move would collide with other pieces
+ * for Knights, will automatically return false
+ *)
 let move_collisions (m:move) (brd:board) : bool = 
 	let (p,src,dst) = m in
-	let collisions = pieces_in_way src dst brd in
-	(* let () = print_endline (string_of_bool ((List.length collisions)>0)) in *)
-	(List.length collisions)>0
+	if p.piecetype = Knight then false (* Knights have no collision constraints *)
+	else
+		let collisions = pieces_in_way src dst brd in
+		(* let () = print_endline (string_of_bool ((List.length collisions)>0)) in *)
+		(List.length collisions)>0
 
 
 (* 
@@ -237,6 +245,7 @@ let detect_pawn_promotion (m:move) (g:game) : bool =
 			p.piecetype = Pawn;
 			x'=x;
 			y'=goal_y;
+			movement_rule m g Normal;
 		]
 	in
 	List.fold_left (&&) true conditions
@@ -260,6 +269,8 @@ let get_mvmt_type (m:move) (g:game) =
 let check_mvmt_rules (m:move) (g:game) : bool = 
 	let (pce,src,dst) = m in
 	let mvmt_type = (get_mvmt_type m g) in
+	(* let (dstx,dsty) = dst in *)
+	(* let _ = Printf.printf "movement_rule passed:%b\n" (movement_rule m g mvmt_type) in *)
 	(* check rules *)
 	let mvmt_conds = [
 		not (space_occupied dst g pce.team); (* [RULE] dst square must not be occupied by pce's team *)
@@ -267,6 +278,11 @@ let check_mvmt_rules (m:move) (g:game) : bool =
 		not (move_collisions m g.board) 	 (* [RULE] the move does not collide w/ other pieces  *)
 	] 
 	in
+(* 	let _ = List.iter (fun x -> Printf.printf "%b, " x) mvmt_conds in
+	let _ = Printf.printf "piece:%s %s\n" pce.id pce.name in
+	let _ = Printf.printf "src:%s,%s\n" (fst src) (snd src) in
+	let _ = Printf.printf "dst:%s,%s\n" (fst dst) (snd dst) in 
+	let _ = print_endline "" in *)
 	List.fold_left (&&) true mvmt_conds
 
 (* assumes that the incoming move is a special move *)
@@ -283,7 +299,6 @@ let handle_normal_move (m:move) (g:game) : move_validation =
 	if (check_mvmt_rules m g) then 
 		if (mvmt_type = Capturing)
 			then
-				let _ = print_endline "capture move" in
 				Valid(Capture)
 			else 
 				Valid(Basic)
@@ -296,6 +311,7 @@ let valid_move (m:move) (the_game:game) : move_validation =
 		Invalid(MovementImpossible) 
 	else
 		if (detect_special_move m the_game) then 
+			let _ = print_endline "SPECIAL" in
 			handle_special_move m the_game (* Special Move *)
 		else
 			handle_normal_move m the_game (* Normal Move *)
@@ -313,10 +329,8 @@ let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): move list =
 	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in
 	let make_piece_move dst = (p,pos,dst) in
 	let validate_pce_move pos = 
-		let (dst_x,dst_y) = pos in
 		match (valid_move (make_piece_move pos) g) with
-		 | Valid t -> 
-		 	let _ = (Printf.printf "[%s,%s] " dst_x dst_y) in true
+		 | Valid t -> true
 		 | Invalid t -> false 
 	in
 	let move_positions = List.filter (fun pos -> (validate_pce_move pos)) sq_positions in
@@ -328,7 +342,7 @@ let possible_movements (p:piece) (g:game) : move list =
 	let piece_pos = 
 		match find_piece_pos p brd with
 		 | Some pos -> pos
-		 | None -> failwith "PieceNotFound" 
+		 | None -> failwith ("Piece "^p.id^" Not Found") 
 	in
 	let _,board_rows = List.split brd in
 	let row_moves = List.map (piece_moves_in_row p piece_pos g) board_rows in
@@ -347,7 +361,7 @@ let pieces_capturable_by_moves (moves:move list) (brd:board) : piece list =
 (* ---------------------------------------------------------------------------- *)
 (* ---------------------------------------------------------------------------- *)
 
-TEST_MODULE "piece_movement_rule_tests" = struct
+TEST_MODULE "piece_mvmts" = struct
 	(* orthogonal *)
 	TEST = (orthogonal_mvmt (3,3) (3,4) 1 Chesstypes.brd_size)=true
 	TEST = (orthogonal_mvmt (3,3) (3,2) 1 Chesstypes.brd_size)=true
@@ -428,6 +442,7 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 	TEST = (queen_mvmt (1,5) (1,3))=true
 	TEST = (queen_mvmt (1,5) (1,2))=true
 	TEST = (queen_mvmt (1,5) (1,1))=true
+	TEST = (queen_mvmt (1,5) (5,1))=true
 	TEST = (queen_mvmt (3,3) (5,4))=false
 
 	(* King *)
@@ -435,6 +450,16 @@ TEST_MODULE "piece_movement_rule_tests" = struct
 	TEST = (king_mvmt (3,3) (2,2))=true
 	TEST = (king_mvmt (3,3) (6,6))=false
 
+
+end
+
+TEST_MODULE "movement_rule" = struct
+	(* let movement_rule (m:move) (g:game) (mtype:mvmt_rule_type) : bool =  *)
+	let board_1 = demo_board_simple_1()
+	let a_game = {make_empty_game() with board=board_1}
+	let pawn_black_1 = { id="P1"; team=Black; name="Pawn"; piecetype=Pawn; }
+	let m = (pawn_black_1,("5","c"),("1","c"))
+	let is_valid = (movement_rule m a_game Capturing)
 
 end
 
@@ -447,11 +472,21 @@ TEST_MODULE "perspectify move" = struct
 end
 
 TEST_MODULE "path_collisions" = struct
-	
+	 
 	(* path_between *)
+	(* diag *)
 	TEST = path_between (2,2) (4,4) = [(3,3)]
+	TEST = path_between (2,2) (5,5) = [(3,3);(4,4)]
+	TEST = path_between (2,2) (6,6) = [(3,3);(4,4);(5,5)]
+	TEST = path_between (1,5) (5,1) = [(2,4);(3,3);(4,2)]
+	TEST = path_between (5,5) (8,5) = [(6,5);(7,5)]
+
+	(* orthog *)
+	TEST = path_between (1,5) (5,1) = [(2,4);(3,3);(4,2)]
 	TEST = path_between (2,2) (2,6) = [(2,3);(2,4);(2,5)]
-	TEST = path_between (1,4) (6,4) = [(2,4);(3,4);(4,4);(5,4)]
+	TEST = path_between (3,3) (8,8) = [(4,4);(5,5);(6,6);(7,7)]
+	TEST = path_between (3,3) (5,1) = [(4,2)]
+	TEST = path_between (6,6) (1,1) = [(5,5);(4,4);(3,3);(2,2)]
 
 	let b = make_empty_board()
 	let src,dst = ("1","a"),("2","a")
@@ -460,7 +495,6 @@ TEST_MODULE "path_collisions" = struct
 	let b = make_init_board()
 	let src,dst = ("1","a"),("8","a")
 	let pieces = (pieces_in_way src dst b)
-
 
 	(* Basic Queen Moves *)
 	let brd = make_empty_board()
@@ -472,6 +506,12 @@ TEST_MODULE "path_collisions" = struct
 	let src,dst = ("3","d"),("3","h")
 	let pieces = (pieces_in_way src dst brd)
 	TEST = (pieces=[pawn_white])
+
+	let board_1 = demo_board_simple_1()
+	let queen_white = { id="Q1"; team=White; name="Queen"; piecetype=Queen; }
+	let m = queen_white,("5","a"),("1","e")
+	let collisions = move_collisions m board_1
+
 
 end
 
