@@ -123,23 +123,58 @@ let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
 	let row = List.assoc row_str the_board in
 	List.assoc col_str row
 
+(* assumes there is a piece at the square given. will fail if empty *)
+let get_piece_at_square (sq:square) = 
+	let (pos,p) = sq in
+	match p with 
+		| None -> failwith "no piece at square"
+		| Some pce -> pce
+
+let get_piece (board:board) (board_pos:boardpos) : piece =
+	let square = !(get_square_on_board board_pos board) in
+	let piece_option = snd square in
+	match piece_option with
+	| Some p -> p
+	| None -> failwith "square empty"
+
 (* returns a board as a single list of all square refs *)
 let flatten_board brd : (square ref) list = 
 	let _,board_rows = List.split brd in
 	let flattened_rows = List.map (fun r -> snd (List.split r)) board_rows in
 	List.flatten flattened_rows
 
+(* returns true if the given square is unoccupied by a piece, else false *)
+let square_empty (s:square) = 
+	let (pos,p) = s in
+	match pos,p with
+		| _,Some x -> false
+		| _,None -> true
+
+(* returns true if the given square is unoccupied by a piece, else false *)
+let square_filled (s:square) = 
+	not (square_empty s)
+
 let piece_at_sq (sq:square ref) (pce:piece) = 
 	let (pos,p) = !sq in 
 	p = Some(pce)
 	
-
 let find_piece_pos (pce:piece) (brd:board) = 
 	let flattened_brd = flatten_board brd in
 	try 
 		let found_square = (List.find (fun sq -> (piece_at_sq sq pce)) flattened_brd) in
 		Some(fst(!found_square))
 	with Not_found -> None
+
+(* returns all pieces, of any team, currently on given board *)
+let all_board_pieces (b:board) = 
+	let flattened_board_sqs = flatten_board b in
+	let square_vals = List.map (!) flattened_board_sqs in 
+	let filled_squares = List.filter square_filled square_vals in
+	List.map get_piece_at_square filled_squares
+
+let all_team_pieces (b:board) (t:team) = 
+	let all_pieces = (all_board_pieces b) in 
+	List.filter (fun p -> p.team=t) all_pieces
 
 (* puts a piece p into a square sq *)
 let fill_square (sq:square) (p:piece) : square =
@@ -269,14 +304,6 @@ let display board =
   List.iter f strss
 
 
-let get_piece (board:board) (board_pos:boardpos) =
-	let square = !(get_square_on_board board_pos board) in
-	let piece_option = snd square in
-	match piece_option with
-	| Some p -> p
-	| None -> failwith "No piece there"
-
-
 (* ---------------------------*)
 (* -------- TESTS ----------- *)
 (* ---------------------------*)
@@ -339,6 +366,19 @@ TEST_MODULE "board utilities" = struct
 	TEST = (found_pos=Some(pos))
 	let found_pos,pos = (find_piece_pos pawn_black_5 brd),("7","d")
 	TEST = (found_pos=Some(pos))
+end
+
+TEST_MODULE "board pieces" = struct
+	let brd = make_init_board()
+	let all_pieces = (all_board_pieces brd)
+	TEST = (List.length all_pieces)=32
+
+	let brd = make_init_board()
+	let all_white_pieces = (all_team_pieces brd White)
+	TEST = (List.length all_white_pieces)=16
+	let all_black_pieces = (all_team_pieces brd Black)
+	TEST = (List.length all_black_pieces)=16
+	
 end
 
 

@@ -45,6 +45,12 @@ val get_square_on_board: boardpos -> board -> square ref
 (* returns the boardpos for the given piece; if piece not found, return None *)
 val find_piece_pos: piece -> board -> boardpos option
 
+(* returns all pieces, of any team, currently on given board *)
+val all_board_pieces: board -> piece list
+
+(* given a team and a board, return a list of all pieces belonging to that team currently present on board *)
+val all_team_pieces: board -> team -> piece list
+
 (* converts a boardpos into integer x,y board coordinates *)
 val boardpos_to_coords: boardpos -> (int*int)
 
