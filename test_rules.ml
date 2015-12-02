@@ -207,7 +207,10 @@ TEST_MODULE "pieces_capturable_by_moves" = struct
 	let g = {make_empty_game() with board=board_1}
 
 	let mvmts = possible_movements queen_white_1 g
+	let vulnerable_pcs = pieces_capturable_by_moves mvmts board_1
+	TEST = (List.length vulnerable_pcs)=1
 
+	let mvmts = possible_movements rook_white_1 g
 	let vulnerable_pcs = pieces_capturable_by_moves mvmts board_1
 	TEST = (List.length vulnerable_pcs)=1
 
