@@ -156,6 +156,7 @@ let is_capture_move (brd:board) (m:move) =
 			if p.team<>src_piece.team then true (* can only capture opponent piece *)
 			else false
 
+
 (* ------------------------------------- *)
 (*  ---   Collision Detection  --------- *)
 (* ------------------------------------- *)
@@ -337,6 +338,7 @@ let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): move list =
 	List.map (fun pos -> make_piece_move pos) move_positions
 
 
+
 let possible_movements (p:piece) (g:game) : move list = 
 	let brd = g.board in
 	let piece_pos = 
@@ -352,6 +354,36 @@ let pieces_capturable_by_moves (moves:move list) (brd:board) : piece list =
 	let capture_moves = List.filter (is_capture_move brd) moves in
 	let capturable_sqs = List.map (fun (p,s,d) -> !(get_square_on_board d brd)) capture_moves in
 	List.map piece_at_sq capturable_sqs
+
+let piece_is_capturable (g:game) (p:piece) : bool = 
+	let opp_team = if p.team=White then Black else White in
+	let opp_pieces = all_team_pieces g.board opp_team in
+	let opp_moves = List.flatten(List.map (fun pce -> possible_movements pce g) opp_pieces) in
+	let vulnerable_pcs = pieces_capturable_by_moves opp_moves g.board in
+	List.mem p vulnerable_pcs
+
+(* ----------------------------- *)
+(* --- Checks and Checkmates --- *)
+(* ----------------------------- *)
+
+type checktype = Check | Checkmate
+
+(* determines whether the king of the given team t is in check or checkmate
+ * returns Some(Check) if in check, Some(Checkmate) if in checkmate, or None
+ * if neither *)
+(*
+let king_in_check (t:team) (g:game) : checktype =
+	let team_king = {id="K"; team=t; name="King"; piecetype=King;} in
+	let pce_pos = 
+	 match (find_piece_pos team_king g.board) with
+	  | None -> None
+	  | Some pos ->
+
+*)
+	
+
+	
+	
 
 
 
@@ -512,6 +544,18 @@ TEST_MODULE "path_collisions" = struct
 	let m = queen_white,("5","a"),("1","e")
 	let collisions = move_collisions m board_1
 
+
+end
+
+TEST_MODULE "capturable" = struct
+	
+	let board_1 = demo_board_simple_1()
+	let g = {make_empty_game() with board=board_1}
+
+	let queen_white_1 = { id="Q"; team=White; name="Queen"; piecetype=Queen; }
+	let pawn_black_1 = { id="P1"; team=Black; name="Pawn"; piecetype=Pawn; }
+	TEST = (piece_is_capturable g pawn_black_1)=true
+	TEST = (piece_is_capturable g queen_white_1)=false
 
 end
 
