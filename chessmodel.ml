@@ -31,7 +31,7 @@ open Chesstypes
 [ PIECE LABELINGS ]
 
 	------- Black ---------
-	R2 K2 B2 Q  K  B1 K1 R1
+	R2 K2 B2 K  Q  B1 K1 R1
 	P8 P7 P6 P5 P4 P3 P2 P1
 	-- -- -- -- -- -- -- --
 	-- -- -- -- -- -- -- --
@@ -129,14 +129,15 @@ let flatten_board brd : (square ref) list =
 	let flattened_rows = List.map (fun r -> snd (List.split r)) board_rows in
 	List.flatten flattened_rows
 
-let piece_at_sq (sq:square) (pce:piece) = 
-	let (pos,p) = sq in
-	p=Some(pce)
+let piece_at_sq (sq:square ref) (pce:piece) = 
+	let (pos,p) = !sq in 
+	p = Some(pce)
+	
 
 let find_piece_pos (pce:piece) (brd:board) = 
 	let flattened_brd = flatten_board brd in
 	try 
-		let found_square = (List.find (fun sq -> (piece_at_sq (!sq) pce)) flattened_brd) in
+		let found_square = (List.find (fun sq -> (piece_at_sq sq pce)) flattened_brd) in
 		Some(fst(!found_square))
 	with Not_found -> None
 
@@ -156,8 +157,8 @@ let make_init_board () =
 	let _ = add_piece_to_board (empty_board) ("1", "a") ("R1") (White) ("Rook") (Rook) in
 	let _ = add_piece_to_board (empty_board) ("1", "b") ("K1") (White) ("Knight") (Knight) in
 	let _ = add_piece_to_board (empty_board) ("1", "c") ("B1") (White) ("Bishop") (Bishop) in
-	let _ = add_piece_to_board (empty_board) ("1", "d") ("Q") (White) ("Queen") (Queen) in
-	let _ = add_piece_to_board (empty_board) ("1", "e") ("K") (White) ("King") (King) in
+	let _ = add_piece_to_board (empty_board) ("1", "d") ("Q" ) (White) ("Queen") (Queen) in
+	let _ = add_piece_to_board (empty_board) ("1", "e") ("K" ) (White) ("King") (King) in
 	let _ = add_piece_to_board (empty_board) ("1", "f") ("B2") (White) ("Bishop") (Bishop) in
 	let _ = add_piece_to_board (empty_board) ("1", "g") ("K2") (White) ("Knight") (Knight) in
 	let _ = add_piece_to_board (empty_board) ("1", "h") ("R2") (White) ("Rook") (Rook) in
@@ -174,8 +175,8 @@ let make_init_board () =
 	let _ = add_piece_to_board (empty_board) ("8", "a") ("R2") (Black) ("Rook") (Rook) in
 	let _ = add_piece_to_board (empty_board) ("8", "b") ("K2") (Black) ("Knight") (Knight) in
 	let _ = add_piece_to_board (empty_board) ("8", "c") ("B2") (Black) ("Bishop") (Bishop) in
-	let _ = add_piece_to_board (empty_board) ("8", "d") ("K") (Black) ("Queen") (King) in
-	let _ = add_piece_to_board (empty_board) ("8", "e") ("Q") (Black) ("King") (Queen) in
+	let _ = add_piece_to_board (empty_board) ("8", "e") ("Q" ) (Black) ("Queen") (Queen) in
+	let _ = add_piece_to_board (empty_board) ("8", "d") ("K" ) (Black) ("King") (King) in
 	let _ = add_piece_to_board (empty_board) ("8", "f") ("B1") (Black) ("Bishop") (Bishop) in
 	let _ = add_piece_to_board (empty_board) ("8", "g") ("K1") (Black) ("Knight") (Knight) in
 	let _ = add_piece_to_board (empty_board) ("8", "h") ("R1") (Black) ("Rook") (Rook) in
@@ -303,19 +304,41 @@ TEST_MODULE "board utilities" = struct
 	TEST = (coords_to_boardpos (1,8))=("8","a")
 
 	let brd = make_empty_board()
-	let pawn_white = { id="P1"; team=White; name="Pawn"; piecetype=Pawn; }
+	let pawn_white_1 = { id="P1"; team=White; name="Pawn"; piecetype=Pawn; }
+	let pawn_white_3 = { id="P3"; team=White; name="Pawn"; piecetype=Pawn; }
+	let pawn_white_5 = { id="P5"; team=White; name="Pawn"; piecetype=Pawn; }
+	let pawn_white_8 = { id="P8"; team=White; name="Pawn"; piecetype=Pawn; }
+
 	let bishop_white = { id="B1"; team=White; name="Bishop"; piecetype=Bishop; }
+	let knight_white_1 = { id="K1"; team=White; name="Knight"; piecetype=Knight; }
+	let king_white = { id="K"; team=White; name="King"; piecetype=King; }
+	let queen_white = { id="Q"; team=White; name="Queen"; piecetype=Queen; }
+	
+	let pawn_black_1 = { id="P1"; team=Black; name="Pawn"; piecetype=Pawn; }
+	let pawn_black_3 = { id="P3"; team=Black; name="Pawn"; piecetype=Pawn; }
+	let pawn_black_5 = { id="P5"; team=Black; name="Pawn"; piecetype=Pawn; }
+	let pawn_black_8 = { id="P8"; team=Black; name="Pawn"; piecetype=Pawn; }
+	let queen_black = { id="Q"; team=Black; name="Queen"; piecetype=Queen; }
 
 	let _ = add_piece_to_board (brd) ("2", "c") ("P1") (White) ("Pawn") (Pawn)
 	
-	let found_pos = find_piece_pos pawn_white brd
+	let found_pos = find_piece_pos pawn_white_1 brd
 	TEST = (found_pos=Some("2","c"))
 	let found_pos = find_piece_pos bishop_white brd
 	TEST = (found_pos=None)
 
-	(* let flattened = flatten_board brd
-	let _ = List.iter (fun s-> print_boardpos(fst !s)) flattened *)
+	let brd = make_init_board()
+	(* white *)
+	let found_pos,pos = (find_piece_pos queen_white brd),("1","d")
+	TEST = (found_pos=Some(pos))
+	let found_pos,pos = (find_piece_pos knight_white_1 brd),("1","b")
+	TEST = (found_pos=Some(pos))
 
+	(* black *)
+	let found_pos,pos = (find_piece_pos queen_black brd),("8","e")
+	TEST = (found_pos=Some(pos))
+	let found_pos,pos = (find_piece_pos pawn_black_5 brd),("7","d")
+	TEST = (found_pos=Some(pos))
 end
 
 
