@@ -2,6 +2,7 @@
 
 open Chesstypes
 open Chessmodel
+open Game
 
 
 
@@ -224,3 +225,23 @@ let update_game_with_move (movetyp:movetype) (move:move) (game:game) : game =
   |CastlingLeft-> do_castle_left move copy_game
   |CastlingRight-> do_castle_right move copy_game
   |PawnPromotion-> do_pawn_promotion move copy_game
+
+(******************************************************************************
+
+
+
+                                  Testsing
+
+
+
+********************************************************************************)
+
+let _ =
+let init_game = make_game () in
+let king_piece = get_piece init_game.board ("e" , "1")
+let _ = display init_game.board in
+let move = (king_piece, ("e" , "1") , ("g" , "1") ) in
+let new_game = update_game_with_move (CastlingRight) (move) (init_game) in
+display new_game.board
+
+
