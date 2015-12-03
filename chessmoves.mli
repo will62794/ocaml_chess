@@ -24,4 +24,4 @@ fields updated
 *)
 
 
-val update_game_with_move: move_type -> move -> game-> game
+val update_game_with_move: movetype -> move -> game-> game

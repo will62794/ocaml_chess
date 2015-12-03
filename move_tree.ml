@@ -1,7 +1,17 @@
+
+open Chesstypes
+open Chessmodel
+open Rules
+open Eval
+open Chessmoves
+
+
+
+
 (*Float designates the value of the game as given by eval*)
 type move_tree =
   | Leaf
-  | Node of (float * game) * game list
+  | Node of (float * game * move option) * move_tree list
 
 
 
@@ -22,35 +32,37 @@ type game = {
 *)
 
 
-let get_all_possible_moves team board=
-  let team_pieces = get_all_pieces team board in
-  let (game:game) = create_game (team) (board) in
+let get_all_possible_moves team game=
+  let team_pieces = get_all_pieces team game.board in
   (*Assumes that possible_movements exposed in rules.ml will return moves such
   as king move two spaces for EnPassant, plus correct trigger moves for Castling
   so forth...*)
-  List.fold_left (fun a b -> List.append b (possible_movements a game))
+  List.fold_left (fun a b -> List.append a (possible_movements b game)) [] team_pieces
 
 
 (*val valid_move : move -> game -> move_validation*)
-let get_move_type (move:move) (game:game): move_type =
+let get_move_type (move:move) (game:game): movetype =
   let move_type = valid_move move game in
-  match  with
+  match move_type with
   | Valid x-> x
   | Invalid y  -> failwith "Inconsistency. Possible movement from rules not
   validated by rules"
 
-let rec generate_tree_helper (prev_num: float) (game:game) (levels:int): move_tree=
+let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_before:move) : move_tree=
   if levels=0 then Leaf else
-  let all_possible_moves = get_all_possible_moves (game.current_turn) (game.board) in
+  let all_possible_moves = get_all_possible_moves (game.current_turn) (game) in
   let assoc_list = List.map (fun a -> (a, (get_move_type a game) , (eval game a))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
   let produce_game_float t = match t with
-  | (move, move_typ, score) -> (update_game_with_move move_typ move game) , score ) in
-  let game_float = List.map produce_game_float assoc_list in
-  (*[(game , float)]*)
-  let move_tree_list = List.map (fun a -> generate_tree_helper (prev_num +. snd a) (fst a)) game_float in
-  Node ((prev_num, game) , move_tree_list)
+  | (move, move_typ, score) -> ((update_game_with_move move_typ move game) , score, move) in
+  let (game_float_move: (game*float*move) list) = List.map produce_game_float assoc_list in
+  (*[(game , float, move)]*)
+  let move_tree_list = List.map (fun a ->
+    match a with
+    | (new_game, new_score, move_2) -> generate_tree_helper (prev_num +. new_score) (new_game) (levels -1) (move_2))
+     game_float_move in
+  Node ((prev_num, game, Some move_before) , move_tree_list)
 
 
 
@@ -58,18 +70,22 @@ let rec generate_tree_helper (prev_num: float) (game:game) (levels:int): move_tr
 (*Levels corresponds to how many steps down the tree it will go before
 terminating with Leaf*)
 let generate_tree (game:game) (levels:int) =
-let all_possible_moves = get_all_possible_moves (game.current_turn) (game.board) in
+let all_possible_moves = get_all_possible_moves (game.current_turn) (game) in
   let assoc_list = List.map (fun a -> (a, (get_move_type a game) , (eval game a))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
   let produce_game_float t = match t with
-  | (move, move_typ, score) -> (update_game_with_move move_typ move game) , score ) in
-  let game_float = List.map produce_game_float assoc_list in
-  (*[(game , float)]*)
-  let move_tree_list = List.map (fun a -> generate_tree_helper (0.0 +. snd a) (fst a)) game_float in
-  Node (0.0, game) , move_tree_list)
+  | (move, move_typ, score) -> ((update_game_with_move move_typ move game) , score, move) in
+  let (game_float_move: (game*float*move) list) = List.map produce_game_float assoc_list in
+  (*[(game , float, move)]*)
+  let move_tree_list = List.map (fun a ->
+    match a with
+    | (new_game, new_score, move_2) -> generate_tree_helper (0.0+.new_score) (new_game) (levels -1) (move_2))
+     game_float_move in
+  Node ((0.0, game, None) , move_tree_list)
   (*[(move, move_type)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
+
 
 
 
