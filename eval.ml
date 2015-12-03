@@ -82,11 +82,11 @@ let vulnerable_points (game: game) (move: move) (pieces: piece list) : float =
 
 let misc_points (board: board) (move: move) : float = 0.
 
-let eval (game: game) (move: move) (pieces: piece list) : float =
+let eval (game: game) (move: move) : float =
   let board = game.board in
   let pieces = (match (fst move).team with
                 | White -> all_team_pieces board Black
-                | Black -> all_team_pieces board White)
+                | Black -> all_team_pieces board White) in
   (capture_mult *. (capture_points board move)) +.
   (position_mult *. (position_points board move)) -.
   (vulnerable_mult *. (vulnerable_points game move pieces)) +.
