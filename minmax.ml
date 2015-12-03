@@ -23,7 +23,7 @@ and min_max (tree: move_tree) (levels: int) (team: team): (float * move option) 
   match tree with
   | Leaf -> failwith ""
   | Node ((score, game, move), tree_list) ->
-    if (levels = 0) then (score, move)
+    if (levels = 1) then (score, move)
     else match team with
          | White -> max (get_list_of_children (tree_list) (levels-1) Black)
          | Black -> min (get_list_of_children (tree_list) (levels-1) White)
