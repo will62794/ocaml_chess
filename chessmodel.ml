@@ -98,20 +98,20 @@ let coords_to_boardpos (x,y) =
 
 
 (* e.g. "1" -> "8", e.g. "3" -> "5" *)
-let invert_row_index row_str = 
+let invert_row_index row_str =
 	let row_int = int_of_string row_str in
 	string_of_int((brd_size+1)-row_int)
 
 (* e.g. "a" -> "h", e.g. "b" -> "g" *)
-let invert_col_index col_str = 
+let invert_col_index col_str =
 	let col_int = get_int_of_letter col_str in
 	get_nth_letter ((brd_size)-col_int)
 
-let invert_boardpos brdpos = 
+let invert_boardpos brdpos =
 	let row_str,col_str = brdpos in
 	(invert_row_index row_str,invert_col_index col_str)
 
-let reflect_board_row row = 
+let reflect_board_row row =
 	List.map (fun (col,sq) -> ((invert_col_index col),sq) ) row
 
 let reflect_board_coords brd =
@@ -124,9 +124,9 @@ let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
 	List.assoc col_str row
 
 (* assumes there is a piece at the square given. will fail if empty *)
-let get_piece_at_square (sq:square) = 
+let get_piece_at_square (sq:square) =
 	let (pos,p) = sq in
-	match p with 
+	match p with
 		| None -> failwith "no piece at square"
 		| Some pce -> pce
 
@@ -138,42 +138,42 @@ let get_piece (board:board) (board_pos:boardpos) : piece =
 	| None -> failwith "square empty"
 
 (* returns a board as a single list of all square refs *)
-let flatten_board brd : (square ref) list = 
+let flatten_board brd : (square ref) list =
 	let _,board_rows = List.split brd in
 	let flattened_rows = List.map (fun r -> snd (List.split r)) board_rows in
 	List.flatten flattened_rows
 
 (* returns true if the given square is unoccupied by a piece, else false *)
-let square_empty (s:square) = 
+let square_empty (s:square) =
 	let (pos,p) = s in
 	match pos,p with
 		| _,Some x -> false
 		| _,None -> true
 
 (* returns true if the given square is unoccupied by a piece, else false *)
-let square_filled (s:square) = 
+let square_filled (s:square) =
 	not (square_empty s)
 
-let piece_at_sq (sq:square ref) (pce:piece) = 
-	let (pos,p) = !sq in 
+let piece_at_sq (sq:square ref) (pce:piece) =
+	let (pos,p) = !sq in
 	p = Some(pce)
-	
-let find_piece_pos (pce:piece) (brd:board) = 
+
+let find_piece_pos (pce:piece) (brd:board) =
 	let flattened_brd = flatten_board brd in
-	try 
+	try
 		let found_square = (List.find (fun sq -> (piece_at_sq sq pce)) flattened_brd) in
 		Some(fst(!found_square))
 	with Not_found -> None
 
 (* returns all pieces, of any team, currently on given board *)
-let all_board_pieces (b:board) = 
+let all_board_pieces (b:board) =
 	let flattened_board_sqs = flatten_board b in
-	let square_vals = List.map (!) flattened_board_sqs in 
+	let square_vals = List.map (!) flattened_board_sqs in
 	let filled_squares = List.filter square_filled square_vals in
 	List.map get_piece_at_square filled_squares
 
-let all_team_pieces (b:board) (t:team) = 
-	let all_pieces = (all_board_pieces b) in 
+let all_team_pieces (b:board) (t:team) =
+	let all_pieces = (all_board_pieces b) in
 	List.filter (fun p -> p.team=t) all_pieces
 
 (* puts a piece p into a square sq *)
@@ -242,6 +242,31 @@ let coords_of_move (m:move) =
 	let (p,src,dest) = m in
 	(boardpos_to_coords src,boardpos_to_coords dest)
 
+let rec get_pieces_helper (team:team) (thelist: square ref list): piece list =
+	match thelist with
+	| [] -> []
+	| hd::tl->
+	let deref_square = (!hd) in
+	let piece_opt = snd (deref_square) in
+	match piece_opt with
+	| None -> (get_pieces_helper team tl)
+	| Some p -> if (p.team = team) then (p :: (get_pieces_helper team tl)) else
+	(get_pieces_helper team tl )
+
+
+let get_all_pieces (team:team) (board:board) =
+	let flatten_board= flatten_board board in
+	get_pieces_helper team flatten_board
+
+
+
+
+
+
+
+
+
+
 
 (* ------------------------ *)
 (* ---  DISPLAY  ---------- *)
@@ -308,8 +333,8 @@ let display board =
 (* -------- TESTS ----------- *)
 (* ---------------------------*)
 
-let print_boardpos brdpos = 
-	let (r,c) = brdpos in 
+let print_boardpos brdpos =
+	let (r,c) = brdpos in
 	(Printf.printf "(%s,%s)\n" r c)
 
 TEST_MODULE "invert_board_coords" = struct
@@ -340,7 +365,7 @@ TEST_MODULE "board utilities" = struct
 	let knight_white_1 = { id="K1"; team=White; name="Knight"; piecetype=Knight; }
 	let king_white = { id="K"; team=White; name="King"; piecetype=King; }
 	let queen_white = { id="Q"; team=White; name="Queen"; piecetype=Queen; }
-	
+
 	let pawn_black_1 = { id="P1"; team=Black; name="Pawn"; piecetype=Pawn; }
 	let pawn_black_3 = { id="P3"; team=Black; name="Pawn"; piecetype=Pawn; }
 	let pawn_black_5 = { id="P5"; team=Black; name="Pawn"; piecetype=Pawn; }
@@ -348,7 +373,7 @@ TEST_MODULE "board utilities" = struct
 	let queen_black = { id="Q"; team=Black; name="Queen"; piecetype=Queen; }
 
 	let _ = add_piece_to_board (brd) ("2", "c") ("P1") (White) ("Pawn") (Pawn)
-	
+
 	let found_pos = find_piece_pos pawn_white_1 brd
 	TEST = (found_pos=Some("2","c"))
 	let found_pos = find_piece_pos bishop_white brd
@@ -378,7 +403,7 @@ TEST_MODULE "board pieces" = struct
 	TEST = (List.length all_white_pieces)=16
 	let all_black_pieces = (all_team_pieces brd Black)
 	TEST = (List.length all_black_pieces)=16
-	
+
 end
 
 
