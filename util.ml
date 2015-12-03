@@ -1,3 +1,4 @@
+
 open Chesstypes
 open Chessmodel
 open Game
@@ -36,7 +37,9 @@ let make_empty_game () =
 		players = ("","");
 		total_moves = 0;
 		current_turn = White;
-		in_enpassant = [];
-		did_castle = (false,false);
+		in_enpassant = None;
+		did_castle = (false,false); (* did_white_castle_yet, did_black_castle_yet *)
 		moved_pieces = [];
 	}
+
+

@@ -76,4 +76,15 @@ val invert_boardpos: boardpos -> boardpos
 *)
 val reflect_board_coords: board -> board
 
-val get_all_pieces: team->board-> piece list
+val get_all_pieces: team-> board-> piece list
+
+val get_piece: board -> boardpos -> piece
+
+(*Deep copies game. Builds a new game from the previous game with new square
+refs*)
+
+val deep_copy_game: game -> game
+
+
+val put_piece_at_boardpos: piece option -> boardpos ->  board -> unit
+
