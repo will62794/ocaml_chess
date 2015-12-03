@@ -5,6 +5,11 @@ open Chesstypes
 *)
 
 
-type command
+type command =
+  | StartPvP
+  | StartPvAI
+  | Quit
+  | Move of boardpos * boardpos
+  | InvalidCmd
 
-val parse_move : string -> command
+val parse_cmd : string -> command
