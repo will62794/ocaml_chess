@@ -22,10 +22,10 @@ val valid_move : move -> game -> move_validation
 	Get all possible moves for piece on the board
   	as well as opponent's vulnerabilities, given a game state
 *)
-val possible_movements: piece -> game -> move list
+val possible_movements: piece -> game -> (move * movetype) list
 
 (* 
 	Given a list of valid moves, determines all of the opponent pieces that would are capturable
  	by those moves. Assumes that all of the moves in move list are moves of the same piece
 *)
-val pieces_capturable_by_moves: move list -> board -> piece list
+val pieces_capturable_by_moves: (move * movetype) list -> board -> piece list

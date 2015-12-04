@@ -1,5 +1,6 @@
 open Chesstypes 
 open Chessmodel
+open Chessmoves
 open Game
 open Demoboards
 open Util
@@ -211,7 +212,6 @@ let move_collisions (m:move) (brd:board) : bool =
 		(* let () = print_endline (string_of_bool ((List.length collisions)>0)) in *)
 		(List.length collisions)>0
 
-
 (* 
 	Castling:
 	a. 	King moves 2 squares towards a rook to its right, and the rook moves to the square the king crossed over
@@ -236,7 +236,24 @@ let detect_castling (m:move) (g:game) (dir:direction) : bool =
 	List.fold_left (&&) true conditions
 
 let detect_en_passant (m:move) (g:game) : bool = 
-	false
+	let (p,src,dst) = m in
+	let (x,y),(x',y') = (boardpos_to_coords src),(boardpos_to_coords dst) in 
+	match g.in_enpassant with
+	 | None -> false
+	 | Some pce -> 
+	 	let enpass_pce_pos = 
+	 		(match (find_piece_pos pce g.board) with
+	 		 | None -> failwith "enpassant detection error"
+	 		 | Some pos -> pos 
+	 		) in
+	 	let (enpass_x,enpass_y) = boardpos_to_coords enpass_pce_pos in
+		let conditions = [
+			p.piecetype = Pawn;
+			pawn_capture_mvmt (x,y) (x',y');
+			abs(x-enpass_x)=1;
+			y = enpass_y;
+		] in
+	List.fold_left (&&) true conditions
 
 let detect_pawn_promotion (m:move) (g:game) : bool = 
 	let (p,src,dst) = m in
@@ -312,7 +329,7 @@ let valid_move (m:move) (the_game:game) : move_validation =
 		Invalid(MovementImpossible) 
 	else
 		if (detect_special_move m the_game) then 
-			let _ = print_endline "SPECIAL" in
+			(* let _ = print_endline "SPECIAL" in *)
 			handle_special_move m the_game (* Special Move *)
 		else
 			handle_normal_move m the_game (* Normal Move *)
@@ -324,22 +341,27 @@ let sq_to_coords (sq:square):int*int =
 	let pos,pce = sq in
 	boardpos_to_coords pos
 
+let move_validation_to_bool (m:move_validation) = 
+	match m with
+		| Valid _ -> true
+		| Invalid _ -> false
+
+(* takes a move validation and returns its associated movetype *)
+let mtype_from_valid (mv:move_validation) : movetype = 
+	match mv with 
+		| Valid mt -> mt
+		| Invalid ft -> failwith "move invalid"
+
 (* given a piece and its position, determine what squares in this row the piece could move to.
  * In other words, what positions in this row satisfy the pieces rule requirements  *)
-let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): move list = 
-	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in
-	let make_piece_move dst = (p,pos,dst) in
-	let validate_pce_move pos = 
-		match (valid_move (make_piece_move pos) g) with
-		 | Valid t -> true
-		 | Invalid t -> false 
-	in
-	let move_positions = List.filter (fun pos -> (validate_pce_move pos)) sq_positions in
-	List.map (fun pos -> make_piece_move pos) move_positions
+let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): (move * movetype) list = 
+	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in (* get all board positions in row *)
+	let moves = List.map (fun d-> (p,pos,d)) sq_positions in (* all poss. move destinations *)
+	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
+	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
+	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
 
-
-
-let possible_movements (p:piece) (g:game) : move list = 
+let possible_movements (p:piece) (g:game) : (move * movetype) list = 
 	let brd = g.board in
 	let piece_pos = 
 		match find_piece_pos p brd with
@@ -350,9 +372,9 @@ let possible_movements (p:piece) (g:game) : move list =
 	let row_moves = List.map (piece_moves_in_row p piece_pos g) board_rows in
 	List.flatten row_moves
 
-let pieces_capturable_by_moves (moves:move list) (brd:board) : piece list = 
-	let capture_moves = List.filter (is_capture_move brd) moves in
-	let capturable_sqs = List.map (fun (p,s,d) -> !(get_square_on_board d brd)) capture_moves in
+let pieces_capturable_by_moves (moves:(move * movetype) list) (brd:board) : piece list = 
+	let capture_moves = List.filter (fun (m,mt) -> (mt=Capture)) moves in
+	let capturable_sqs = List.map (fun ((p,s,d),mt) -> !(get_square_on_board d brd)) capture_moves in
 	List.map piece_at_sq capturable_sqs
 
 let piece_is_capturable (g:game) (p:piece) : bool = 
@@ -368,24 +390,35 @@ let piece_is_capturable (g:game) (p:piece) : bool =
 
 type checktype = Check | Checkmate
 
+(* Observes all possible future game states, given all moves that *)
+let in_checkmate (king:piece) (g:game) =
+	let team_pcs = all_team_pieces g.board king.team in
+	let all_team_moves = List.flatten(List.map (fun p -> possible_movements p g) team_pcs)  in
+	let game_states = 
+		List.map (fun (m,mt) -> update_game_with_move mt m g) all_team_moves in 
+	let future_kings_capturable = 
+		List.map (fun g -> piece_is_capturable g king) game_states in 
+	List.fold_left (||) false future_kings_capturable
+
+(* is the given king in check *)
+let in_check (king:piece) (g:game) = 
+	(piece_is_capturable g king)  
+
 (* determines whether the king of the given team t is in check or checkmate
  * returns Some(Check) if in check, Some(Checkmate) if in checkmate, or None
- * if neither *)
-(*
-let king_in_check (t:team) (g:game) : checktype =
+ * if neither. Will return None if the king isnt on the board *)
+let king_in_check (t:team) (g:game) : checktype option =
 	let team_king = {id="K"; team=t; name="King"; piecetype=King;} in
-	let pce_pos = 
-	 match (find_piece_pos team_king g.board) with
-	  | None -> None
-	  | Some pos ->
+	let pce_pos = (find_piece_pos team_king g.board) in
+	if pce_pos=None then None
+	else 
+	  	if (in_checkmate team_king g) then Some(Checkmate)
+	  	else if (in_check team_king g) then Some(Check)
+	  	else None
 
-*)
-	
-
-	
-	
-
-
+(* Does this move create a check or checkmate *)
+(* let move_creates_check (m:move) (g:game) = 
+	update_game_with_move m g *)
 
 (* ---------------------------------------------------------------------------- *)
 (* ---------------------------------------------------------------------------- *)
@@ -558,6 +591,45 @@ TEST_MODULE "capturable" = struct
 	TEST = (piece_is_capturable g queen_white_1)=false
 
 end
+
+TEST_MODULE "check and checkmate" = struct
+(*
+		------- Black ---------
+		a  b  c  d  e  f  g  h
+	8	-- -- R1 -- -- K1 -- --  <-- all black pieces (with white King)
+	7	-- -- B1 -- P1 -- -- --  <-- all black pieces
+	6	-- K -- -- -- -- -- --   <-- white king
+	5	-- -- -- -- -- -- -- --
+	4	-- -- P1 -- -- -- -- --  <-- all white pieces 
+	3	Q- -- -- K- R2 -- P4 --  <-- all white pieces (with black King)
+	2	-- -- -- R1 -- -- -- --  <-- all white pieces
+	1	-- -- -- -- -- -- -- --
+		------- White ---------
+*)
+	
+	let board_1 = demo_board_dense_1()
+	let g = {make_empty_game() with board=board_1}
+
+	let king_black = { id="K"; team=Black; name="King"; piecetype=King; }
+	let king_white = { id="K"; team=White; name="King"; piecetype=King; }
+
+	let _ = add_piece_to_board (board_1) ("3", "d") ("K") (Black) ("King") (King)
+	let _ = add_piece_to_board (board_1) ("6", "b") ("K") (White) ("King") (King)
+
+	(* let _ = print_board board_1 *)
+
+(* 	let check_black = king_in_check Black g
+	TEST = (in_checkmate king_black g) = true *)
+
+
+	(* let _ = print_board board_1 *)
+
+(* 	let check_white = king_in_check White g
+	TEST = check_white = Some(Check) *)
+
+
+end
+
 
 
 

@@ -46,7 +46,7 @@ let demo_board_simple_1 () =  brdsimple1
 		------- Black ---------
 		a  b  c  d  e  f  g  h
 	8	-- -- R1 -- -- K1 -- --  <-- all black pieces
-	7	-- -- -- -- P1 -- -- --  <-- all black pieces
+	7	-- -- B1 -- P1 -- -- --  <-- all black pieces
 	6	-- -- -- -- -- -- -- --
 	5	-- -- -- -- -- -- -- --
 	4	-- -- P1 -- -- -- -- --  <-- all white pieces

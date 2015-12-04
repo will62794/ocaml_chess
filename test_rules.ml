@@ -132,6 +132,34 @@ TEST_MODULE "valid_move with collisions" = struct
  
 end
 
+TEST_MODULE "special moves" = struct
+
+	(* En Passant *)
+	let board_1 = make_empty_board()
+	let g = {make_empty_game() with board=board_1}
+	let _ = add_piece_to_board (g.board) ("5", "b") ("P1") (White) ("Pawn") (Pawn) 
+	let _ = add_piece_to_board (g.board) ("5", "c") ("P1") (Black) ("Pawn") (Pawn) 
+
+	let g = {g with in_enpassant=Some(pawn_black_1)}
+
+ 	TEST = ((valid_move (pawn_white_1,("5","b"),("6","c")) g)=Valid(EnPassant))
+
+ 	(* Castling *)
+	let board_1 = make_empty_board()
+	let g = {make_empty_game() with board=board_1}
+	let _ = add_piece_to_board (g.board) ("1", "h") ("R1") (White) ("Rook") (Rook) 
+	let _ = add_piece_to_board (g.board) ("1", "e") ("K") (White) ("King") (King) 
+
+ 	TEST = ((valid_move (king_white_1,("1","e"),("1","g")) g)=Valid(CastlingRight))
+
+ 	(* PawnPromotion *)
+	let board_1 = make_empty_board()
+	let g = {make_empty_game() with board=board_1}
+	let _ = add_piece_to_board (g.board) ("1", "h") ("P1") (White) ("Pawn") (Pawn) 
+
+end
+
+
 (* let _ = print_endline "\nQueen White 1 Mvmts:" *)
 (* 	let _ = print_mvmts mvmts
 let _ = print_int (List.length(mvmts)) *)
@@ -146,8 +174,8 @@ TEST_MODULE "possible_movements" = struct
 	let mvmts = (possible_movements pawn_black_1 a_game)
 	TEST = (List.length mvmts)=2
 	TEST = (mvmts=[
-			(pawn_black_1,("5","c"),("3","c"));
-			(pawn_black_1,("5","c"),("4","c"))
+			((pawn_black_1,("5","c"),("3","c")),Basic);
+			((pawn_black_1,("5","c"),("4","c")),Basic)
 		]) 
 	(* Queen White 1 *)
 	let mvmts = (possible_movements queen_white_1 a_game)
@@ -195,6 +223,9 @@ TEST_MODULE "possible_movements" = struct
 	TEST = (List.length mvmts)=16
 
 	let mvmts = (possible_movements rook_white_1 a_game)
+	let _ = print_mvmts (fst(List.split mvmts))
+	let _ = print_string "MVMTS:"
+	let _ = print_int (List.length mvmts)
 	TEST = (List.length mvmts)=14
 
 	let mvmts = (possible_movements rook_white_2 a_game)
