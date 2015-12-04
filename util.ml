@@ -1,6 +1,7 @@
 open Chesstypes
 open Chessmodel
 open Game
+open Display
 
 let print_boardpos brdpos =
 	let (r,c) = brdpos in
@@ -30,9 +31,14 @@ let print_boardrow (r:row) =
 	let _ = List.iter (print_sq_piece) sqs in
 	print_endline ""
 
+
+(*
+
 let print_board (b:board) =
 	let rows = snd (List.split b) in
 	List.iter print_boardrow (List.rev rows)
+
+*)
 
 let make_empty_game () =
 	{
