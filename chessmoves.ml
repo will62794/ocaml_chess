@@ -216,7 +216,8 @@ in
   }
 
 let update_game_with_move (movetyp:movetype) (move:move) (game:game) : game =
-  let copy_game = deep_copy_game game in
+  let brd_copy = copy_board game.board in
+  let copy_game = {game with board=brd_copy} in
   match movetyp with
   |Basic -> do_basic_move movetyp move copy_game
   |Capture-> do_basic_move movetyp move copy_game
