@@ -30,9 +30,11 @@ type game = {
 }
 
 *)
+(*possible_movements: piece -> game -> (move * movetype) list*)
 
 
-let get_all_possible_moves team game=
+
+let get_all_possible_moves (team:team) (game:game) : (move*movetype) list=
   let team_pieces = get_all_pieces team game.board in
   (*Assumes that possible_movements exposed in rules.ml will return moves such
   as king move two spaces for EnPassant, plus correct trigger moves for Castling
@@ -41,17 +43,20 @@ let get_all_possible_moves team game=
 
 
 (*val valid_move : move -> game -> move_validation*)
+
+(*
 let get_move_type (move:move) (game:game): movetype =
   let move_type = valid_move move game in
   match move_type with
   | Valid x-> x
   | Invalid y  -> failwith "Inconsistency. Possible movement from rules not
   validated by rules"
+*)
 
 let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_before:move) : move_tree=
   if levels=0 then Leaf else
   let all_possible_moves = get_all_possible_moves (game.current_turn) (game) in
-  let assoc_list = List.map (fun a -> (a, (get_move_type a game) , (eval game a))) all_possible_moves in
+  let assoc_list = List.map (fun a -> (fst a , snd a , (eval game a))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
   let produce_game_float t = match t with
