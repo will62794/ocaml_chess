@@ -32,7 +32,6 @@ let print_boardrow (r:row) (row_id:string) =
 	print_endline ""
 
 let print_board (b:board) =
-	let _ = print_endline ""
 	let _ = List.iter (fun (id,r) -> (print_boardrow r id)) (List.rev b) in
 	let _ = Printf.printf "   ╚═══════════════════════\n" in
 	Printf.printf "     A  B  C  D  E  F  G  H\n"
