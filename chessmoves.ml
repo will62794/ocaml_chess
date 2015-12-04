@@ -64,7 +64,7 @@ let get_enpassant (move:move) : piece option =
   if (((int_of_string (fst (board_pos1)) = 2) &&
   (int_of_string (fst (board_pos2)) = 4) ))
   || ((int_of_string (fst (board_pos1)) =7 ) &&
-  ((int_of_string (fst board_pos2)) = 5)) then let _ = print_string "Correct" in  Some p else let _ = print_string "Wrong" in  None
+  ((int_of_string (fst board_pos2)) = 5)) then Some p else None
 
 
 let do_basic_move movetyp move game =
