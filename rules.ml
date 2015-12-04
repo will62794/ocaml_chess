@@ -627,43 +627,6 @@ TEST_MODULE "capturable" = struct
 
 end
 
-TEST_MODULE "check and checkmate" = struct
-(*
-		------- Black ---------
-		a  b  c  d  e  f  g  h
-	8	-- -- R1 -- -- K1 -- --  <-- all black pieces (with white King)
-	7	-- -- B1 -- P1 -- -- --  <-- all black pieces
-	6	-- K -- -- -- -- -- --   <-- white king
-	5	-- -- -- -- -- -- -- --
-	4	-- -- P1 -- -- -- -- --  <-- all white pieces 
-	3	Q- -- -- K- R2 -- P4 --  <-- all white pieces (with black King)
-	2	-- -- -- R1 -- -- -- --  <-- all white pieces
-	1	-- -- -- -- -- -- -- --
-		------- White ---------
-*)
-	
-	let board_1 = demo_board_dense_1()
-	let g = {make_empty_game() with board=board_1}
-
-	let king_black = { id="K"; team=Black; name="King"; piecetype=King; }
-	let king_white = { id="K"; team=White; name="King"; piecetype=King; }
-
-	let _ = add_piece_to_board (board_1) ("3", "d") ("K") (Black) ("King") (King)
-	let _ = add_piece_to_board (board_1) ("6", "b") ("K") (White) ("King") (King)
-
-	(* let _ = print_board board_1 *)
-
-(* 	let check_black = king_in_check Black g
-	TEST = (in_checkmate king_black g) = true *)
-
-
-	(* let _ = print_board board_1 *)
-
-(* 	let check_white = king_in_check White g
-	TEST = check_white = Some(Check) *)
-
-
-end
 
 
 
