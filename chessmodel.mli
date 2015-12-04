@@ -86,3 +86,5 @@ val copy_board: board -> board
 
 val put_piece_at_boardpos: piece option -> boardpos ->  board -> unit
 
+val display: board-> unit
+

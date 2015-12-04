@@ -61,3 +61,19 @@ let make_empty_game () =
 	}
 
 
+let print_game (game:game)=
+	let _ = print_board (game.board) in
+	let _ = print_string "The number of turns " ; print_string (string_of_int game.total_moves) in
+	let _ =
+	if (game.current_turn = White) then print_string "White team's turn \n" else
+	print_string "Black team's turn \n" in
+	let _ = match game.in_enpassant with
+	| None -> print_string "There is no peice subject to elpessant \n"
+	| Some p-> print_string "There is a piece in enpassant \n" ; print_piece p
+in
+let _ = print_string "White has castled \n" ; print_string (string_of_bool (fst game.did_castle)) in
+let _ =  print_string "Black has castled \n" ; print_string (string_of_bool (snd game.did_castle)) in
+let _ = List.map (fun p -> print_piece p ; ()) game.moved_pieces in
+()
+
+
