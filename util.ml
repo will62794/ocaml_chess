@@ -33,19 +33,14 @@ let print_sq_piece sq =
 		| Some pce -> print_string (" "^(get_unicode pce)^" ")
 		| None  -> print_string " - "
 
-let print_boardrow (r:row) (n: int)   =
-	let (rws,sqs) = (List.split r) in
-	let _ = Printf.printf "%d║" n in
+let print_boardrow (r:row) =
+	let sqs = snd (List.split r) in
 	let _ = List.iter (print_sq_piece) sqs in
 	print_endline ""
 
-let rec print_board_help (rows:row list) (n: int) =
-	match rows with
-	| [] -> ()
-	| h::t -> print_boardrow h n; print_board_help t (n-1)
-
 let print_board (b:board) =
-	print_board_help (snd (List.split b)) 8;
+	let rows = snd (List.split b) in
+	List.iter print_boardrow (List.rev rows);
 	Printf.printf " ╚═══════════════════════\n";
 	Printf.printf "   A  B  C  D  E  F  G  H\n"
 
