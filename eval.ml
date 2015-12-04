@@ -79,7 +79,6 @@ let vulnerable_points (game: game) (move: move) (team: team): float =
   let capturable = pieces_capturable_by_moves moves_list board in
   List.fold_left (fun x y -> x +. (get_piece_val y)) 0. capturable
 
-
 let misc_points (board: board) (move: move) : float = 0.
 
 let eval (game: game) (move: move) : float =

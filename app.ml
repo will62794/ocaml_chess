@@ -6,6 +6,8 @@ open Chessmodel
 open Chessintel
 open Cmdparse
 open Display
+open Move_tree
+open Minmax
 
 let prompt_char = "$ "
 
@@ -37,14 +39,19 @@ let rec game_input g =
 let rec game_loop g gt team =
   refresh();
   print_board(g.board);
-  (if(team = White) then Printf.printf "Enter white's move:"
+  let pmove = if (gt || team=White) then ((if(team = White) then Printf.printf "Enter white's move:"
   else Printf.printf "Enter black's move:");
-  let pmove = game_input g in
+  game_input g)
+  else
+      (let tree = generate_tree g 2 in
+      (match snd (min_max tree 2 team) with
+                  | None -> failwith ""
+                  | Some x -> x)) in
   match pmove with
   | (piece, _, _) -> if piece.team <> team
   then let _ = Printf.printf "INVALID MOVE\n" in game_loop g gt team else
-  if (team = White) then (
-  match (valid_move pmove g) with
+  if (team = White) then
+  (match (valid_move pmove g) with
   | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt White
   | Valid mt -> game_loop (update_game_with_move mt pmove g) gt Black)
   else if gt
@@ -53,15 +60,9 @@ let rec game_loop g gt team =
     | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt Black
     | Valid mt -> game_loop (update_game_with_move mt pmove g) gt White
   else
-    failwith ("unimplemented")
-    (*let aimove = request_move 1 g'.board in
-    let g'' =
-    match (valid_move aimove g') with
-      | Invalid ft -> failwith("this AI sucks")
-      | Valid mt -> update_game_with_move mt aimove g'
-    in
-    let _ = print_board (g''.board) in
-    game_loop (g'') (gt) *)
+    match (valid_move pmove g) with
+    | Invalid _ -> failwith ""
+    | Valid mt -> game_loop (update_game_with_move mt pmove g) gt White
 
 let rec main_input () =
   let _ = print_string prompt_char in

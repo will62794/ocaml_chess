@@ -129,9 +129,10 @@ let rec print_tree (move_tree: move_tree): unit =
       ()
       end
   | Leaf -> print_string "This is a leaf \n "
-
+(*
 let _ =
 let init_game = make_game () in
 let thetree = generate_tree init_game 2 in
 let _= print_tree thetree in
 ()
+*)
