@@ -65,14 +65,10 @@ let position_points (board: board) (move: move) : float =
      | Some cap_piece -> get_pos_points cap_piece dest true) -.
      get_pos_points piece src true
 
-
-let modified_possible_movements (themoves: (move*movetype) list) : move list =
-  List.map (fun a -> fst a) themoves
-
-let rec get_all_moves (pieces: piece list) (board: board) (acc: move*movetype list) (game: game) =
+let rec get_all_moves (pieces: piece list) (board: board) (acc: (move * movetype) list) (game: game) =
   match pieces with
   | [] -> acc
-  | h::t -> get_all_moves t board (acc @ (modified_possible_movements h game)) game
+  | h::t -> get_all_moves t board (acc @ (possible_movements h game)) game
 
 (* pieces from op team, double check this func lol *)
 let vulnerable_points (game: game) (move: move) (pieces: piece list) : float =
@@ -80,7 +76,7 @@ let vulnerable_points (game: game) (move: move) (pieces: piece list) : float =
   let new_board = (match execute_move move board with
                   | None -> failwith ""
                   | Some x -> x) in
-  let all_moves = modified_possible_movements (get_all_moves pieces new_board [] game) in
+  let all_moves = get_all_moves pieces new_board [] game in
   List.fold_left (fun acc p -> acc +. (get_piece_val p))
                   0. (pieces_capturable_by_moves all_moves new_board)
 

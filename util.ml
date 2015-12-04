@@ -6,7 +6,7 @@ let print_boardpos brdpos =
 	let (r,c) = brdpos in
 	(Printf.printf "(%s,%s) " r c)
 
-let print_mvmts (mvmts: (move * movetype) list) = 
+let print_mvmts (mvmts: (move * movetype) list) =
 	let moves = fst (List.split mvmts) in
 	let _ = List.iter (fun (p,s,d) -> print_boardpos d) moves in
 	print_endline ""
@@ -17,15 +17,15 @@ let print_piece (p:piece) =
 		| Black -> "Black" in
 	Printf.printf "(%s,%s,%s)" p.name p.id team_str
 
-let print_sq_piece sq = 
+let print_sq_piece sq =
 	let (pos,p) = !sq in
 	match p with
-		| Some pce -> 
+		| Some pce ->
 			if (String.length pce.id)=1 then print_string (pce.id^"  ")
 			else print_string (pce.id^" ")
 		| None  -> print_string "-- "
 
-let print_boardrow (r:row) = 
+let print_boardrow (r:row) =
 	let sqs = snd (List.split r) in
 	let _ = List.iter (print_sq_piece) sqs in
 	print_endline ""
@@ -93,5 +93,3 @@ let rook_black_1 = { id="R1"; team=Black; name="Rook"; piecetype=Rook; }
 let rook_black_2 = { id="R2"; team=Black; name="Rook"; piecetype=Rook; }
 let queen_black_1 = { id="Q"; team=Black; name="Queen"; piecetype=Queen; }
 let king_black_1 = { id="K"; team=Black; name="King"; piecetype=King; }
-
-

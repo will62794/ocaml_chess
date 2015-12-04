@@ -56,7 +56,7 @@ let get_move_type (move:move) (game:game): movetype =
 let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_before:move) : move_tree=
   if levels=0 then Leaf else
   let all_possible_moves = get_all_possible_moves (game.current_turn) (game) in
-  let assoc_list = List.map (fun a -> (fst a , snd a , (eval game a))) all_possible_moves in
+  let assoc_list = List.map (fun a -> (fst a , snd a , (eval game (fst a)))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
   let produce_game_float t = match t with
@@ -76,7 +76,7 @@ let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_be
 terminating with Leaf*)
 let generate_tree (game:game) (levels:int) =
 let all_possible_moves = get_all_possible_moves (game.current_turn) (game) in
-  let assoc_list = List.map (fun a -> (a, (get_move_type a game) , (eval game a))) all_possible_moves in
+  let assoc_list = List.map (fun a -> (fst a , snd a , (eval game (fst a)))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
   let produce_game_float t = match t with
