@@ -45,3 +45,5 @@ type game = {
 	did_castle: bool * bool; (* did_white_castle_yet, did_black_castle_yet *)
 	moved_pieces: piece list;
 }
+
+type difficulty_level = int

@@ -270,18 +270,21 @@ let put_piece_at_boardpos (piece:piece option) (board_pos: boardpos) (board:boar
   square_ref := (board_pos, piece)
 
 
+(* returns a square ref with same data but a fresh reference *)
+let copy_square (sq:square ref) : square ref =
+  ref(!sq)
+
+let copy_boardrow (r:row) : row =
+  let (coords,sqs) = List.split r in
+  let sq_copies = (List.map copy_square sqs) in
+  List.combine coords sq_copies
 
 (*Deep copies the game by creating new square refs*)
-let deep_copy_game (game:game): game =
-  game
-
-
-
-
-
-
-
-
+let copy_board (b:board): board =
+  let coords,rows = List.split b in
+  let row_copies = List.map copy_boardrow rows in
+  let board_copy = List.combine coords row_copies in
+  board_copy
 
 
 
@@ -423,6 +426,15 @@ TEST_MODULE "board pieces" = struct
 
 end
 
+TEST_MODULE "board copy" = struct
+  let brd = make_init_board()
+  let brd_copy = copy_board brd
+  let flattened_orig = flatten_board brd
+  let flattened_cpy = flatten_board brd_copy
+  (* all square refs should be distinct b/w copy and original *)
+  TEST = (List.for_all2 (fun a b -> not (a==b)) flattened_orig flattened_cpy)
+
+end
 
 
 
