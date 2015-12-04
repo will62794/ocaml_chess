@@ -80,10 +80,8 @@ val get_all_pieces: team-> board-> piece list
 
 val get_piece: board -> boardpos -> piece
 
-(*Deep copies game. Builds a new game from the previous game with new square
-refs*)
-
-val deep_copy_game: game -> game
+(* returns a board with same data but fresh references to each square *)
+val copy_board: board -> board
 
 
 val put_piece_at_boardpos: piece option -> boardpos ->  board -> unit
