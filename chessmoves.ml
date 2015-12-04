@@ -286,7 +286,7 @@ type boardpos = string * string (* (row,column) e.g. (5,a) *)
 
 *)
 
-
+(*
 
 let _ =
 let init_game = make_game () in
@@ -303,6 +303,8 @@ let pawn_promoted = get_piece (second_game.board) ("2" , "c") in
 let move_3 = (pawn_promoted , ("2" , "c") , ("8" , "c")) in
 let third_game = update_game_with_move (PawnPromotion) (move_3) (second_game) in
 print_game third_game
+
+*)
 
 
 
