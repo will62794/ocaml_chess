@@ -74,13 +74,13 @@ let do_basic_move movetyp move game =
   in
   (*Assumes execute_move_returns deep copy of the board*)
   {
-  board=new_board ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=get_enpassant (move) ;
-  did_castle=game.did_castle ;
-  moved_pieces= get_moved_piece_list p game.moved_pieces
+    board=new_board ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=get_enpassant (move) ;
+    did_castle=game.did_castle ;
+    moved_pieces= get_moved_piece_list p game.moved_pieces
   }
 
 
@@ -100,13 +100,13 @@ in
   (*boardpos * piece option*)
   let _ = target_square_ref:= (coords_to_boardpos (end_x, (end_y+1)) , None) in
   {
-  board=theboard ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=None ;
-  did_castle=game.did_castle ;
-  moved_pieces= get_moved_piece_list p game.moved_pieces
+    board=theboard ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=None ;
+    did_castle=game.did_castle ;
+    moved_pieces= get_moved_piece_list p game.moved_pieces
   }
 
 (*castling left white
@@ -132,14 +132,14 @@ let do_castle_left move game =
   let _ = put_piece_at_boardpos (Some king_piece) ("1", "c") (game.board) in
   let _ = put_piece_at_boardpos (Some rook_piece) ("1" , "d") (game.board) in
   {
-  board=game.board ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=None ;
-  did_castle=(true, snd (game.did_castle)) ;
-  moved_pieces= let moved_pieces = get_moved_piece_list king_piece
-  game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
+    board=game.board ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=None ;
+    did_castle=(true, snd (game.did_castle)) ;
+    moved_pieces= let moved_pieces = get_moved_piece_list king_piece
+    game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
   }
 
   | Black ->
@@ -148,14 +148,14 @@ let do_castle_left move game =
   let _ = put_piece_at_boardpos (Some king_piece) ("8", "c") (game.board) in
   let _ = put_piece_at_boardpos (Some rook_piece) ("8" , "d") in
   {
-  board=game.board ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=None ;
-  did_castle=(fst (game.did_castle),  true) ;
-  moved_pieces= let moved_pieces = get_moved_piece_list king_piece
-  game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
+    board=game.board ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=None ;
+    did_castle=(fst (game.did_castle),  true) ;
+    moved_pieces= let moved_pieces = get_moved_piece_list king_piece
+    game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
   }
 
 let do_castle_right move game =
@@ -167,14 +167,14 @@ let do_castle_right move game =
   let _ = put_piece_at_boardpos (Some king_piece) ("1", "g") (game.board) in
   let _ = put_piece_at_boardpos (Some rook_piece) ("1" , "f") in
   {
-  board=game.board ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=None ;
-  did_castle=(true, snd (game.did_castle)) ;
-  moved_pieces= let moved_pieces = get_moved_piece_list king_piece
-  game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
+    board=game.board ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=None ;
+    did_castle=(true, snd (game.did_castle)) ;
+    moved_pieces= let moved_pieces = get_moved_piece_list king_piece
+    game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
   }
 
   | Black ->
@@ -183,14 +183,14 @@ let do_castle_right move game =
   let _ = put_piece_at_boardpos (Some king_piece) ("8", "g") (game.board) in
   let _ = put_piece_at_boardpos (Some rook_piece) ("8" , "f") in
   {
-  board=game.board ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=None ;
-  did_castle=(fst (game.did_castle),  true) ;
-  moved_pieces= let moved_pieces = get_moved_piece_list king_piece
-  game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
+    board=game.board ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=None ;
+    did_castle=(fst (game.did_castle),  true) ;
+    moved_pieces= let moved_pieces = get_moved_piece_list king_piece
+    game.moved_pieces in get_moved_piece_list rook_piece moved_pieces
   }
 
 let do_pawn_promotion (move:move) (game:game) =
@@ -206,22 +206,22 @@ in
   let new_queen = create_piece (new_id) (game.current_turn) ("Queen") (Queen) in
   let _ = put_piece_at_boardpos (Some new_queen) (board_pos2) in
   {
-  board=theboard ;
-  players = game.players ;
-  total_moves= game.total_moves+1 ;
-  current_turn = get_other_team (game.current_turn) ;
-  in_enpassant=None ;
-  did_castle=game.did_castle ;
-  moved_pieces= game.moved_pieces
+    board=theboard ;
+    players = game.players ;
+    total_moves= game.total_moves+1 ;
+    current_turn = get_other_team (game.current_turn) ;
+    in_enpassant=None ;
+    did_castle=game.did_castle ;
+    moved_pieces= game.moved_pieces
   }
 
 let update_game_with_move (movetyp:movetype) (move:move) (game:game) : game =
   let brd_copy = copy_board game.board in
   let copy_game = {game with board=brd_copy} in
   match movetyp with
-  |Basic -> do_basic_move movetyp move copy_game
-  |Capture-> do_basic_move movetyp move copy_game
-  |EnPassant-> do_enpassant_move move copy_game
-  |CastlingLeft-> do_castle_left move copy_game
-  |CastlingRight-> do_castle_right move copy_game
-  |PawnPromotion-> do_pawn_promotion move copy_game
+    |Basic -> do_basic_move movetyp move copy_game
+    |Capture-> do_basic_move movetyp move copy_game
+    |EnPassant-> do_enpassant_move move copy_game
+    |CastlingLeft-> do_castle_left move copy_game
+    |CastlingRight-> do_castle_right move copy_game
+    |PawnPromotion-> do_pawn_promotion move copy_game
