@@ -65,20 +65,20 @@ let position_points (board: board) (move: move) : float =
      | Some cap_piece -> get_pos_points cap_piece dest true) -.
      get_pos_points piece src true
 
-let rec get_all_moves (pieces: piece list) (board: board) (acc: (move * movetype) list) (game: game) =
+let rec get_moves_list (pieces: piece list) (game: game)
+                       (acc: (move * movetype) list): (move * movetype) list =
   match pieces with
   | [] -> acc
-  | h::t -> get_all_moves t board (acc @ (possible_movements h game)) game
+  | h::t -> get_moves_list t game ((possible_movements h game) @ acc)
 
 (* pieces from op team, double check this func lol *)
-let vulnerable_points (game: game) (move: move) (pieces: piece list) : float =
+let vulnerable_points (game: game) (move: move) (team: team): float =
   let board = game.board in
-  let new_board = (match execute_move move board with
-                  | None -> failwith ""
-                  | Some x -> x) in
-  let all_moves = get_all_moves pieces new_board [] game in
-  List.fold_left (fun acc p -> acc +. (get_piece_val p))
-                  0. (pieces_capturable_by_moves all_moves new_board)
+  let opp_pieces = all_team_pieces board team in
+  let moves_list = get_moves_list opp_pieces game [] in
+  let capturable = pieces_capturable_by_moves moves_list board in
+  List.fold_left (fun x y -> x +. (get_piece_val y)) 0. capturable
+
 
 let misc_points (board: board) (move: move) : float = 0.
 
@@ -89,10 +89,7 @@ let eval (game: game) (move: move) : float =
                   | White -> 1.
                   | Black -> -1.) in
   let board = game.board in
-  let pieces = (match team with
-                | White -> all_team_pieces board Black
-                | Black -> all_team_pieces board White) in
   ((capture_mult *. (capture_points board move)) +.
   (position_mult *. (position_points board move)) -.
-  (vulnerable_mult *. (vulnerable_points game move pieces)) +.
+  (vulnerable_mult *. (vulnerable_points game move team)) +.
   (misc_mult *. (misc_points board move))) *. team_mult
