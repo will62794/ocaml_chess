@@ -34,6 +34,8 @@ type failtype = MovementImpossible | MoveError
 type movetype = Basic | Capture | EnPassant | CastlingLeft | CastlingRight | PawnPromotion
 type move_validation = Valid of movetype | Invalid of failtype
 
+type checktype = Check | Checkmate
+
 type player = string
 
 type game = {

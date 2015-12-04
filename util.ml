@@ -20,8 +20,9 @@ let print_boardpos brdpos =
 	let (r,c) = brdpos in
 	(Printf.printf "(%s,%s) " r c)
 
-let print_mvmts mvmts = 
-	let _ = List.iter (fun (p,s,d) -> print_boardpos d) mvmts in
+let print_mvmts (mvmts: (move * movetype) list) = 
+	let moves = fst (List.split mvmts) in
+	let _ = List.iter (fun (p,s,d) -> print_boardpos d) moves in
 	print_endline ""
 
 let print_piece (p:piece) =
@@ -76,24 +77,34 @@ let _ = List.map (fun p -> print_piece p ; ()) game.moved_pieces in
 
 
 (* Test Pieces *)
+(* white *)
 let pawn_white_1 = { id="P1"; team=White; name="Pawn"; piecetype=Pawn; }
 let pawn_white_2 = { id="P2"; team=White; name="Pawn"; piecetype=Pawn; }
 let pawn_white_3 = { id="P3"; team=White; name="Pawn"; piecetype=Pawn; }
 let pawn_white_4 = { id="P4"; team=White; name="Pawn"; piecetype=Pawn; }
-
+let pawn_white_5 = { id="P5"; team=White; name="Pawn"; piecetype=Pawn; }
+let pawn_white_6 = { id="P6"; team=White; name="Pawn"; piecetype=Pawn; }
 let knight_white_1 = { id="K1"; team=White; name="Knight"; piecetype=Knight; }
 let knight_white_2 = { id="K2"; team=White; name="Knight"; piecetype=Knight; }
 let bishop_white_1 = { id="B1"; team=White; name="Bishop"; piecetype=Bishop; }
+let bishop_white_2 = { id="B2"; team=White; name="Bishop"; piecetype=Bishop; }
 let rook_white_1 = { id="R1"; team=White; name="Rook"; piecetype=Rook; }
 let rook_white_2 = { id="R2"; team=White; name="Rook"; piecetype=Rook; }
 let queen_white_1 = { id="Q"; team=White; name="Queen"; piecetype=Queen; }
 let king_white_1 = { id="K"; team=White; name="King"; piecetype=King; }
 
+(* black *)
 let pawn_black_1 = { id="P1"; team=Black; name="Pawn"; piecetype=Pawn; }
+let pawn_black_2 = { id="P2"; team=Black; name="Pawn"; piecetype=Pawn; }
 let pawn_black_3 = { id="P3"; team=Black; name="Pawn"; piecetype=Pawn; }
+let pawn_black_4 = { id="P4"; team=Black; name="Pawn"; piecetype=Pawn; }
+let pawn_black_5 = { id="P5"; team=Black; name="Pawn"; piecetype=Pawn; }
+let pawn_black_6 = { id="P6"; team=Black; name="Pawn"; piecetype=Pawn; }
 let knight_black_1 = { id="K1"; team=Black; name="Knight"; piecetype=Knight; }
+let knight_black_2 = { id="K2"; team=Black; name="Knight"; piecetype=Knight; }
 let bishop_black_1 = { id="B1"; team=Black; name="Bishop"; piecetype=Bishop; }
 let rook_black_1 = { id="R1"; team=Black; name="Rook"; piecetype=Rook; }
+let rook_black_2 = { id="R2"; team=Black; name="Rook"; piecetype=Rook; }
 let queen_black_1 = { id="Q"; team=Black; name="Queen"; piecetype=Queen; }
 let king_black_1 = { id="K"; team=Black; name="King"; piecetype=King; }
 

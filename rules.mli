@@ -29,3 +29,12 @@ val possible_movements: piece -> game -> (move * movetype) list
  	by those moves. Assumes that all of the moves in move list are moves of the same piece
 *)
 val pieces_capturable_by_moves: (move * movetype) list -> board -> piece list
+
+
+(* 
+  Determines whether the king of the given team is in check or checkmate.
+  returns Some(Check) if in check, Some(Checkmate) if in checkmate, or None
+  if neither. Will return None if the specified king isn't on the board 
+*)
+val king_in_check: team -> game -> checktype option
+

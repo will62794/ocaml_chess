@@ -7,9 +7,9 @@ open Util
 
 type direction = Left | Right
 
-(* -------------------------------- *)
-(*  ---   Movement Rules  --------  *)
-(* -------------------------------- *)
+(* ---------------------------------------- *)
+(*  ---   Physical Movement Rules  --------  *)
+(* ---------------------------------------- *)
 
 type mvmt_rule_type = Normal | Capturing | Initial
 
@@ -158,9 +158,9 @@ let is_capture_move (brd:board) (m:move) =
 			else false
 
 
-(* ------------------------------------- *)
-(*  ---   Collision Detection  --------- *)
-(* ------------------------------------- *)
+(* ---------------------------------------------------- *)
+(*  ---   Piece Collision Detection  ------------------ *)
+(* ---------------------------------------------------- *)
 
 (* is a board square currently occupied by a certain team *)
 let space_occupied (p:boardpos) (g:game) (t:team) =
@@ -212,29 +212,48 @@ let move_collisions (m:move) (brd:board) : bool =
 		(* let () = print_endline (string_of_bool ((List.length collisions)>0)) in *)
 		(List.length collisions)>0
 
+
+(* ---------------------------------------------- *)
+(*  ---   Special Move Detection  --------------- *)
+(* ---------------------------------------------- *)
+
 (* 
-	Castling:
-	a. 	King moves 2 squares towards a rook to its right, and the rook moves to the square the king crossed over
-	b. 	May only be done if the king has never moved, the rook involved has never moved, the squares b/w
+	CASTLING:
+		- King moves 2 squares towards a rook to its right, and the rook moves to the square the king crossed over
+		- May only be done if the king has never moved, the rook involved has never moved, the squares b/w
 		the rook and king are not occupied
-	-> treat castling as a king move
-	-> dir tells whether to check castling to Left or Right
+	we treat castling as a king's move. dir tells whether to check castling to Left or Right
 *)
+(* val create_piece: string -> team -> string -> piecekind -> piece *)
 let detect_castling (m:move) (g:game) (dir:direction) : bool =
 	let (p,src,dst) = m in
 	let white_castled,black_castled = g.did_castle in
 	let can_castle = not (if (p.team = White) then white_castled else black_castled) in
 	let (x,y),(x',y') = (boardpos_to_coords src),(boardpos_to_coords dst) in 
-	let side_swap = (if dir=Left then 1 else -1) in (* castle left or right *)
-	let king_dx = side_swap * (if (p.team = White) then 2 else -2) in
-	let conditions = [
-		p.piecetype = King;
-		can_castle;
-		(y'=y);
-		(x'-x)=king_dx
-	] in
-	List.fold_left (&&) true conditions
+	let castling_side = (if dir=Left then -1 else 1) in (* check for castling on left or right *)
+	let king_dx = castling_side * (if (p.team = White) then 2 else -2) in (* x mvmt the king should make *)
+	let rook_id = if dir=Left then "R1" else "R2" in
+	let rook_involved = (create_piece rook_id p.team "Rook" Rook) in
+	match (find_piece_pos rook_involved g.board) with
+	 | None -> false (* rook not on board *)
+	 | Some rook_pos -> 
+		let conditions = [
+			List.length(pieces_in_way src rook_pos g.board)=0;
+			p.piecetype = King;
+			not (piece_moved_yet p g); 
+			not (piece_moved_yet rook_involved g);
+			can_castle;
+			(y'=y);
+			(x'-x)=king_dx;
+		] in
+		List.fold_left (&&) true conditions
 
+(* 
+	EN PASSANT:
+		- can be made by a pawn next to another pawn directly after oppponent's pawn has made its
+		  initial 2 space move forward. your pawn can move diagonally forward and cpature the square that the o
+		  opposing pawn "passed over". potential for en passant only lasts a single turn
+*)
 let detect_en_passant (m:move) (g:game) : bool = 
 	let (p,src,dst) = m in
 	let (x,y),(x',y') = (boardpos_to_coords src),(boardpos_to_coords dst) in 
@@ -249,12 +268,21 @@ let detect_en_passant (m:move) (g:game) : bool =
 	 	let (enpass_x,enpass_y) = boardpos_to_coords enpass_pce_pos in
 		let conditions = [
 			p.piecetype = Pawn;
-			pawn_capture_mvmt (x,y) (x',y');
+			movement_rule m g Capturing; (* <- a quasi-hack, but enpassant moves conveniently obey pawn capture mvmt rules *)
 			abs(x-enpass_x)=1;
+			x'=enpass_x; (* must move pawn forward on correct side *)
 			y = enpass_y;
 		] in
-	List.fold_left (&&) true conditions
+		(* let _ = List.iter (fun p -> Printf.printf "%b," p) conditions in *)
+		(* let _ = print_endline "" in *)
+		List.fold_left (&&) true conditions
 
+
+(* 
+	PAWN PROMOTION:
+		- when a pawn reaches the last square on the board, replace the pawn with piece
+		  of user's choice
+*)
 let detect_pawn_promotion (m:move) (g:game) : bool = 
 	let (p,src,dst) = m in
 	let (x,y),(x',y') = (boardpos_to_coords src),(boardpos_to_coords dst) in 
@@ -276,6 +304,11 @@ let detect_special_move (m:move) (g:game) : bool =
 			(detect_pawn_promotion m g)
 		] in
 	List.fold_left (||) false detectors
+
+
+(* ======================================== *)
+(* ====== Move Handling  ================== *)
+(* ======================================== *)
 
 (* Normal, Initial, or Capturing *)
 let get_mvmt_type (m:move) (g:game) =  
@@ -323,19 +356,21 @@ let handle_normal_move (m:move) (g:game) : move_validation =
 	else 
 		Invalid(MovementImpossible)
 
+(* determines if a move is valid, given a game state *)
 let valid_move (m:move) (the_game:game) : move_validation =
 	(* universal rule - piece moves to valid board space  *)
 	if not (inbounds_rule m) then 
 		Invalid(MovementImpossible) 
 	else
 		if (detect_special_move m the_game) then 
-			(* let _ = print_endline "SPECIAL" in *)
 			handle_special_move m the_game (* Special Move *)
 		else
 			handle_normal_move m the_game (* Normal Move *)
 
-		
-(* --- Possible Moves for Piece (Inverse Rule Calculations) --- *)
+
+(* ------------------------------------------ *)
+(* --- Inverse Rule Calculations ------------ *)
+(* ------------------------------------------ *)
 
 let sq_to_coords (sq:square):int*int = 
 	let pos,pce = sq in
@@ -384,21 +419,21 @@ let piece_is_capturable (g:game) (p:piece) : bool =
 	let vulnerable_pcs = pieces_capturable_by_moves opp_moves g.board in
 	List.mem p vulnerable_pcs
 
-(* ----------------------------- *)
-(* --- Checks and Checkmates --- *)
-(* ----------------------------- *)
-
-type checktype = Check | Checkmate
+(* -------------------------------------- *)
+(* --- Checks and Checkmates ------------ *)
+(* -------------------------------------- *)
 
 (* Observes all possible future game states, given all moves that *)
 let in_checkmate (king:piece) (g:game) =
 	let team_pcs = all_team_pieces g.board king.team in
-	let all_team_moves = List.flatten(List.map (fun p -> possible_movements p g) team_pcs)  in
+	let all_team_moves = List.flatten(List.map (fun p -> possible_movements p g) team_pcs) in
 	let game_states = 
 		List.map (fun (m,mt) -> update_game_with_move mt m g) all_team_moves in 
 	let future_kings_capturable = 
 		List.map (fun g -> piece_is_capturable g king) game_states in 
-	List.fold_left (||) false future_kings_capturable
+(* 	let _ = List.iter (fun x-> Printf.printf "%b " x) future_kings_capturable in
+	let _ = print_endline "" in *)
+	List.fold_left (&&) true future_kings_capturable
 
 (* is the given king in check *)
 let in_check (king:piece) (g:game) = 
