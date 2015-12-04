@@ -9,16 +9,16 @@ open Display
 
 let prompt_char = "$ "
 
-let refresh () = 
+let refresh () =
   for i=0 to 100 do print_endline ""; done
 
-let print_move_instructions () = 
+let print_move_instructions () =
   let _ = print_endline("- INSTRUCTIONS -") in
   let _ = print_endline("Moves are entered in the following format:") in
   let _ = print_endline("<source_column:source_row> to <dest_column><dest_row>") in
   let _ = print_endline("for example, 'a5 to b7' ") in
   print_endline("type 'quit' to exit\n")
-                
+
 
 let rec game_input g =
   let _ = print_string prompt_char in
@@ -34,22 +34,24 @@ let rec game_input g =
                       end
       | _ -> print_endline("please enter a valid command"); game_input g
 
-let rec game_loop g gt white =
+let rec game_loop g gt team =
   refresh();
   print_board(g.board);
-  if (white) then (
-  print_endline("Enter Player 1's Move");
-  let p1move = game_input g in
-  match (valid_move p1move g) with
-  | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt true
-  | Valid mt -> game_loop (update_game_with_move mt p1move g) gt false)
+  (if(team = White) then Printf.printf "Enter white's move:"
+  else Printf.printf "Enter black's move:");
+  let pmove = game_input g in
+  match pmove with
+  | (piece, _, _) -> if piece.team <> team
+  then let _ = Printf.printf "INVALID MOVE\n" in game_loop g gt team else
+  if (team = White) then (
+  match (valid_move pmove g) with
+  | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt White
+  | Valid mt -> game_loop (update_game_with_move mt pmove g) gt Black)
   else if gt
   then
-    let _ = print_endline("Enter Player 2's Move") in
-    let p2move = game_input g in
-    match (valid_move p2move g) with
-    | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt false
-    | Valid mt -> game_loop (update_game_with_move mt p2move g) gt true
+    match (valid_move pmove g) with
+    | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt Black
+    | Valid mt -> game_loop (update_game_with_move mt pmove g) gt White
   else
     failwith ("unimplemented")
     (*let aimove = request_move 1 g'.board in
@@ -69,12 +71,12 @@ let rec main_input () =
                     print_endline("Starting PvP Game");
                     print_endline("");
                     print_move_instructions();
-                    game_loop (make_game()) (true) true
+                    game_loop (make_game()) (true) White
       | StartPvAI -> print_endline("");
                      print_endline("Starting PvAI Game");
                      print_endline("");
                      print_move_instructions();
-                     game_loop (make_game()) (false) true
+                     game_loop (make_game()) (false) White
       | Quit -> exit 0
       | Move(a,b) -> print_endline("please enter a valid command");
                      main_input()
