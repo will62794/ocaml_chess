@@ -2,7 +2,20 @@
 open Chesstypes
 open Chessmodel
 open Game
+open Display
 
+let white_pcs = [("King","♕");("Queen","♔");("Bishop","♗");("Rook","♖");("Knight","♘");("Pawn","♙")]
+let black_pcs = [("King","♚");("Queen","♛");("Bishop","♝");("Rook","♜");("Knight","♞");("Pawn","♟")]
+
+let unicode_pieces = [
+	(Black,black_pcs);
+	(White,white_pcs)
+]
+
+let get_unicode (pce: piece) =
+	let team = pce.team in
+	let team_pcs = List.assoc team unicode_pieces in
+	List.assoc pce.name team_pcs
 
 let print_piece (p:piece) =
 	let team_str = match p.team with
@@ -17,19 +30,24 @@ let print_boardpos brdpos =
 let print_sq_piece sq =
 	let (pos,p) = !sq in
 	match p with
-		| Some pce ->
-			if (String.length pce.id)=1 then print_string (pce.id^"  ")
-			else print_string (pce.id^" ")
-		| None  -> print_string "-- "
+		| Some pce -> print_string (" "^(get_unicode pce)^" ")
+		| None  -> print_string " - "
 
-let print_boardrow (r:row) =
-	let sqs = snd (List.split r) in
+let print_boardrow (r:row) (n: int)   =
+	let (rws,sqs) = (List.split r) in
+	let _ = Printf.printf "%d║" n in
 	let _ = List.iter (print_sq_piece) sqs in
 	print_endline ""
 
+let rec print_board_help (rows:row list) (n: int) =
+	match rows with
+	| [] -> ()
+	| h::t -> print_boardrow h n; print_board_help t (n-1)
+
 let print_board (b:board) =
-	let rows = snd (List.split b) in
-	List.iter print_boardrow (List.rev rows)
+	print_board_help (snd (List.split b)) 8;
+	Printf.printf " ╚═══════════════════════\n";
+	Printf.printf "   A  B  C  D  E  F  G  H\n"
 
 let make_empty_game () =
 	{

@@ -265,10 +265,10 @@ let put_piece_at_boardpos (piece:piece option) (board_pos: boardpos) (board:boar
 
 
 (* returns a square ref with same data but a fresh reference *)
-let copy_square (sq:square ref) : square ref = 
+let copy_square (sq:square ref) : square ref =
   ref(!sq)
 
-let copy_boardrow (r:row) : row = 
+let copy_boardrow (r:row) : row =
   let (coords,sqs) = List.split r in
   let sq_copies = (List.map copy_square sqs) in
   List.combine coords sq_copies

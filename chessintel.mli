@@ -1,4 +1,4 @@
-open Chess
+open Chesstypes
 (*
 	chessintel.mli
 
