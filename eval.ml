@@ -65,7 +65,7 @@ let position_points (board: board) (move: move) : float =
      | Some cap_piece -> get_pos_points cap_piece dest true) -.
      get_pos_points piece src true
 
-let rec get_all_moves (pieces: piece list) (board: board) (acc: move list) (game: game) =
+let rec get_all_moves (pieces: piece list) (board: board) (acc: (move * movetype) list) (game: game) =
   match pieces with
   | [] -> acc
   | h::t -> get_all_moves t board (acc @ (possible_movements h game)) game
