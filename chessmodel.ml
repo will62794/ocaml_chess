@@ -407,7 +407,7 @@ TEST_MODULE "board utilities" = struct
   TEST = (found_pos=Some(pos))
 
   (* black *)
-  let found_pos,pos = (find_piece_pos queen_black brd),("8","e")
+  let found_pos,pos = (find_piece_pos queen_black brd),("8","d")
   TEST = (found_pos=Some(pos))
   let found_pos,pos = (find_piece_pos pawn_black_5 brd),("7","d")
   TEST = (found_pos=Some(pos))
@@ -435,41 +435,4 @@ TEST_MODULE "board copy" = struct
   TEST = (List.for_all2 (fun a b -> not (a==b)) flattened_orig flattened_cpy)
 
 end
-
-
-
-(*
-
-let _ =
-let new_board = make_init_board () in
-display new_board ;
-(*piece * boardpos * boardpos*)
-(*boardpos = string * string*)
-let board_pos_1 = ("1", "c") in
-let board_pos_2 = ("4", "c") in
-let piece_1= get_piece new_board board_pos_1 in
-let move= (piece_1 , board_pos_1 , board_pos_2) in
-let board = match (execute_move move new_board) with
-| Some b -> b
-| None -> failwith "No piece there"
-in
-display board
-
-
-let _ =
-let new_board = make_init_board () in
-display new_board ;
-(*piece * boardpos * boardpos*)
-(*boardpos = string * string*)
-let board_pos_1 = ("3", "c") in
-let board_pos_2 = ("4", "c") in
-let piece_1= get_piece new_board board_pos_1 in
-let move= (piece_1 , board_pos_1 , board_pos_2) in
-let board = match (execute_move move new_board) with
-| Some b -> b
-| None -> failwith "No board"
-in
-display board ;
-
-*)
 
