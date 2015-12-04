@@ -2,6 +2,7 @@
 
 open Chesstypes
 open Chessmodel
+open Util
 open Game
 
 
@@ -60,10 +61,10 @@ type boardpos = string * string (* (row,column) e.g. (5,a) *)
 let get_enpassant (move:move) : piece option =
   match move with
   | (p, board_pos1, board_pos2) -> if (p.piecetype!=Pawn) then None else
-  if (int_of_string (fst (board_pos1)) = 2) &&
-  (int_of_string (fst (board_pos1)) = 4)
-  || (int_of_string (fst (board_pos1)) =7 ) &&
-  ((int_of_string (fst board_pos1)) = 5) then Some p else None
+  if (((int_of_string (fst (board_pos1)) = 2) &&
+  (int_of_string (fst (board_pos2)) = 4) ))
+  || ((int_of_string (fst (board_pos1)) =7 ) &&
+  ((int_of_string (fst board_pos2)) = 5)) then let _ = print_string "Correct" in  Some p else let _ = print_string "Wrong" in  None
 
 
 let do_basic_move movetyp move game =
@@ -131,7 +132,9 @@ let do_castle_left move game =
   let king_piece = get_piece game.board ("1" , "e") in
   let rook_piece = get_piece game.board ("1" , "a") in
   let _ = put_piece_at_boardpos (Some king_piece) ("1", "c") (game.board) in
+  let _ = put_piece_at_boardpos (None) ("1" , "e") (game.board) in
   let _ = put_piece_at_boardpos (Some rook_piece) ("1" , "d") (game.board) in
+  let _ = put_piece_at_boardpos (None) ("1" , "a") (game.board) in
   {
   board=game.board ;
   players = game.players ;
@@ -147,7 +150,9 @@ let do_castle_left move game =
   let king_piece = get_piece game.board ("8" , "e") in
   let rook_piece = get_piece game.board ("8" , "a") in
   let _ = put_piece_at_boardpos (Some king_piece) ("8", "c") (game.board) in
-  let _ = put_piece_at_boardpos (Some rook_piece) ("8" , "d") in
+  let _ = put_piece_at_boardpos (None) ("8" , "e") (game.board) in
+  let _ = put_piece_at_boardpos (Some rook_piece) ("8" , "d") (game.board) in
+  let _ = put_piece_at_boardpos (None) ("8" , "a") (game.board) in
   {
   board=game.board ;
   players = game.players ;
@@ -166,7 +171,9 @@ let do_castle_right move game =
   let king_piece = get_piece (game.board) ("1" , "e") in
   let rook_piece = get_piece (game.board) ("1" , "h") in
   let _ = put_piece_at_boardpos (Some king_piece) ("1", "g") (game.board) in
-  let _ = put_piece_at_boardpos (Some rook_piece) ("1" , "f") in
+  let _ = put_piece_at_boardpos (None) ("1" , "e") (game.board) in
+  let _ = put_piece_at_boardpos (Some rook_piece) ("1" , "f") (game.board) in
+  let _ = put_piece_at_boardpos (None) ("1" , "h") (game.board) in
   {
   board=game.board ;
   players = game.players ;
@@ -182,7 +189,9 @@ let do_castle_right move game =
   let king_piece = get_piece (game.board) ("8" , "e") in
   let rook_piece = get_piece (game.board) ("8" , "h") in
   let _ = put_piece_at_boardpos (Some king_piece) ("8", "g") (game.board) in
-  let _ = put_piece_at_boardpos (Some rook_piece) ("8" , "f") in
+  let _ = put_piece_at_boardpos (None) ("8" , "e") (game.board) in
+  let _ = put_piece_at_boardpos (Some rook_piece) ("8" , "f") (game.board) in
+  let _ = put_piece_at_boardpos (None) ("8" , "h") (game.board) in
   {
   board=game.board ;
   players = game.players ;
@@ -199,13 +208,13 @@ let do_pawn_promotion (move:move) (game:game) =
   let theboard =
   match execute_move (move) (game.board) with
   | Some x -> x
-  |None -> failwith "There should be a baord"
+  |None -> failwith "There should be a board"
 in
   (*create_piece: string -> team -> string -> piecekind -> piece*)
   let random_num = Random.float 1000.0 in
   let new_id = string_of_int (int_of_float random_num) in
   let new_queen = create_piece (new_id) (game.current_turn) ("Queen") (Queen) in
-  let _ = put_piece_at_boardpos (Some new_queen) (board_pos2) in
+  let _ = put_piece_at_boardpos (Some new_queen) (board_pos2) (game.board) in
   {
   board=theboard ;
   players = game.players ;
@@ -227,21 +236,78 @@ let update_game_with_move (movetyp:movetype) (move:move) (game:game) : game =
   |PawnPromotion-> do_pawn_promotion move copy_game
 
 (******************************************************************************
-
-
-
                                   Testsing
-
-
-
 ********************************************************************************)
+
+(*Tests White Castle Right, Black Castle Right*)
+
+(*
+let _ =
+let init_game = make_game () in
+let _= display init_game.board in
+let king_piece = get_piece (init_game.board) ("1", "e") in
+let move = (king_piece, ( "2" , "e") , ("2" , "g") ) in
+let new_game = update_game_with_move (CastlingRight) (move) (init_game) in
+let _ = display new_game.board in
+let second_game= update_game_with_move (CastlingRight)(move)(new_game) in
+display second_game.board
+*)
+
+(*Test Castle White Left, Castle Black Left*)
+
+(*
 
 let _ =
 let init_game = make_game () in
-let king_piece = get_piece init_game.board ("e" , "1")
-let _ = display init_game.board in
-let move = (king_piece, ("e" , "1") , ("g" , "1") ) in
-let new_game = update_game_with_move (CastlingRight) (move) (init_game) in
-display new_game.board
+let _= print_game init_game in
+let king_piece = get_piece (init_game.board) ("1", "e") in
+let move = (king_piece, ( "2" , "e") , ("2" , "g") ) in
+let new_game = update_game_with_move (CastlingLeft) (move) (init_game) in
+let _ = print_game new_game in
+let second_game= update_game_with_move (CastlingLeft)(move)(new_game) in
+print_game second_game
+
+*)
+
+
+(*-------- Black --------
+  a8 b8 c8 d8 e8 f8 g8 h8
+  a7 b7 c7 d7 e7 f7 g7 h7
+  a6 b6 c6 d6 e6 f6 g6 h6
+  a5 b5 c5 d5 e5 f5 g5 h5
+  a4 b4 c4 d4 e4 f4 g4 h4
+  a3 b3 c3 d3 e3 f3 g3 h3
+  a2 b2 c2 d2 e2 f2 g2 h2
+  a1 b1 c1 d1 e1 f1 g1 h1
+  -------- White --------
+
+type boardpos = string * string (* (row,column) e.g. (5,a) *)
+
+*)
+
+
+
+let _ =
+let init_game = make_game () in
+let _= print_game init_game in
+let pawn_piece = get_piece (init_game.board) ("2", "e") in
+let move = (pawn_piece, ( "2" , "e") , ("4" , "e") ) in
+let new_game = update_game_with_move (Basic) (move) (init_game) in
+let _ = print_game new_game in
+let pawn_piece_2 = get_piece (init_game.board) ("7", "c") in
+let second_move = (pawn_piece_2, ("7", "c") , ("3" , "e")) in
+let second_game = update_game_with_move (EnPassant) (second_move) (new_game) in
+print_game second_game ;
+let pawn_promoted = get_piece (second_game.board) ("2" , "c") in
+let move_3 = (pawn_promoted , ("2" , "c") , ("8" , "c")) in
+let third_game = update_game_with_move (PawnPromotion) (move_3) (second_game) in
+print_game third_game
+
+
+
+
+
+
+
 
 

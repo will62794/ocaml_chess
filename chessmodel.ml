@@ -117,7 +117,13 @@ let reflect_board_row row =
 let reflect_board_coords brd =
   List.map (fun (s,row) -> ((invert_row_index s),(reflect_board_row row))) brd
 
-(* (row,column) e.g. (5,a) *)
+(* (row,column) e.g. (5,a)
+
+type square = boardpos * piece option (* (position,piece); piece=None if the suare is empty *)
+type row = (string * square ref) list (* (row #, list of squares) *)
+type board = (string * row) list
+
+*)
 let get_square_on_board (board_pos: boardpos) (the_board: board): square ref =
   let row_str,col_str = board_pos in
   let row = List.assoc row_str the_board in
@@ -211,8 +217,8 @@ let make_init_board () =
   let _ = add_piece_to_board (empty_board) ("8", "a") ("R2") (Black) ("Rook") (Rook) in
   let _ = add_piece_to_board (empty_board) ("8", "b") ("K2") (Black) ("Knight") (Knight) in
   let _ = add_piece_to_board (empty_board) ("8", "c") ("B2") (Black) ("Bishop") (Bishop) in
-  let _ = add_piece_to_board (empty_board) ("8", "e") ("Q" ) (Black) ("Queen") (Queen) in
-  let _ = add_piece_to_board (empty_board) ("8", "d") ("K" ) (Black) ("King") (King) in
+  let _ = add_piece_to_board (empty_board) ("8", "e") ("K" ) (Black) ("King") (King) in
+  let _ = add_piece_to_board (empty_board) ("8", "d") ("Q" ) (Black) ("Queen") (Queen) in
   let _ = add_piece_to_board (empty_board) ("8", "f") ("B1") (Black) ("Bishop") (Bishop) in
   let _ = add_piece_to_board (empty_board) ("8", "g") ("K1") (Black) ("Knight") (Knight) in
   let _ = add_piece_to_board (empty_board) ("8", "h") ("R1") (Black) ("Rook") (Rook) in

@@ -88,3 +88,5 @@ val deep_copy_game: game -> game
 
 val put_piece_at_boardpos: piece option -> boardpos ->  board -> unit
 
+val display: board-> unit
+

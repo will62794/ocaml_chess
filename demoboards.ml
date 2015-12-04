@@ -1,11 +1,11 @@
 open Chesstypes
 open Chessmodel
 
-(* 
-	Provide stock board setups suitable for testing of various modules 
+(*
+	Provide stock board setups suitable for testing of various modules
 
-	-- DO NOT MODIFY THESE BOARDS-- 
-	they are used in testing routines. If you want a custom board, create  
+	-- DO NOT MODIFY THESE BOARDS--
+	they are used in testing routines. If you want a custom board, create
 	a new one, or use an existing one.
 *)
 
