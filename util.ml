@@ -31,7 +31,9 @@ let print_boardrow (r:row) =
 	let _ = List.iter (print_sq_piece) sqs in
 	print_endline ""
 
-
+let print_move (m:move) =
+	let (_,(srcx,srcy),(dstx,dsty)) = m in
+	(Printf.printf "(%s,%s) to (%s,%s)" srcx srcy dstx dsty)
 (*
 
 let print_board (b:board) =
