@@ -9,7 +9,16 @@ open Display
 open Move_tree
 open Minmax
 
-let prompt_char = "$ "
+let intro =   "
+ █████╗  █████╗ █████╗ ███╗   ███╗██╗     █████╗██╗  ██╗███████╗███████╗███████╗
+██╔══██╗██╔═══╝██╔══██╗████╗ ████║██║    ██╔═══╝██║  ██║██╔════╝██╔════╝██╔════╝
+██║  ██║██║    ███████║██╔████╔██║██║    ██║    ███████║█████╗  ███████╗███████╗
+██║  ██║██║    ██╔══██║██║╚██╔╝██║██║    ██║    ██╔══██║██╔══╝  ╚════██║╚════██║
+╚█████╔╝╚█████╗██║  ██║██║ ╚═╝ ██║██████╗╚█████╗██║  ██║███████╗███████║███████║
+ ╚════╝  ╚════╝╚═╝  ╚═╝╚═╝     ╚═╝══════╝ ╚════╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝"
+
+
+let prompt_char = " > "
 
 let refresh () =
   for i=0 to 100 do print_endline ""; done
@@ -17,7 +26,7 @@ let refresh () =
 let print_move_instructions () =
   let _ = print_endline("- INSTRUCTIONS -") in
   let _ = print_endline("Moves are entered in the following format:") in
-  let _ = print_endline("<source_column:source_row> to <dest_column><dest_row>") in
+  let _ = print_endline("<source_column><source_row> to <dest_column><dest_row>") in
   let _ = print_endline("for example, 'a5 to b7' ") in
   print_endline("type 'quit' to exit\n")
 
@@ -30,17 +39,16 @@ let rec game_input g =
       | Move(x,y) -> let (bpos,pc') = !(get_square_on_board x g.board) in
                       begin
                        match pc' with
-                        | None -> print_endline("there's no piece there");
+                        | None -> print_endline("INVALID MOVE\n");
                                   game_input g
                         | Some pc -> (pc,x,y)
                       end
       | _ -> print_endline("please enter a valid command"); game_input g
 
 let rec game_loop g gt team =
-  refresh();
   print_board(g.board);
-  let pmove = if (gt || team=White) then ((if(team = White) then Printf.printf "Enter white's move:"
-  else Printf.printf "Enter black's move:");
+  let pmove = if (gt || team=White) then ((if(team = White) then Printf.printf "Enter white's move"
+  else Printf.printf "Enter black's move");
   game_input g)
   else
       (let tree = generate_tree g 4 0.1 in
@@ -50,20 +58,20 @@ let rec game_loop g gt team =
                   | Some x -> x)) in
   match pmove with
   | (piece, _, _) -> if piece.team <> team
-  then let _ = Printf.printf "INVALID MOVE\n" in game_loop g gt team else
+  then let _ = refresh(); Printf.printf "INVALID MOVE\n" in game_loop g gt team else
   if (team = White) then
   (match (valid_move pmove g) with
-  | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt White
-  | Valid mt -> game_loop (update_game_with_move mt pmove g) gt Black)
+  | Invalid ft ->   refresh();Printf.printf "INVALID MOVE\n"; game_loop g gt White
+  | Valid mt ->   refresh(); game_loop (update_game_with_move mt pmove g) gt Black)
   else if gt
   then
     match (valid_move pmove g) with
-    | Invalid ft -> Printf.printf "INVALID MOVE\n"; game_loop g gt Black
-    | Valid mt -> game_loop (update_game_with_move mt pmove g) gt White
+    | Invalid ft ->   refresh();Printf.printf "INVALID MOVE\n"; game_loop g gt Black
+    | Valid mt ->   refresh(); game_loop (update_game_with_move mt pmove g) gt White
   else
     match (valid_move pmove g) with
-    | Invalid _ -> failwith ""
-    | Valid mt -> game_loop (update_game_with_move mt pmove g) gt White
+    | Invalid _ -> failwith "err0r"
+    | Valid mt -> refresh(); game_loop (update_game_with_move mt pmove g) gt White
 
 let rec main_input () =
   let _ = print_string prompt_char in
@@ -86,6 +94,7 @@ let rec main_input () =
                       main_input()
 
 let main () =
+  print_endline intro;
   print_endline "";
   print_endline "Welcome to OCamlChess!";
   print_endline "";
