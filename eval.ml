@@ -42,7 +42,7 @@ let get_piece_val (piece: piece): float =
   | Bishop -> 300.
   | Rook -> 500.
   | Queen -> 900.
-  | King -> failwith ""
+  | King -> 1000000.
 
 let get_piece (board: board) (loc: boardpos): piece option =
   snd !(get_square_on_board loc board)
@@ -73,16 +73,12 @@ let rec get_moves_list (pieces: piece list) (game: game)
 
 (* pieces from op team, double check this func lol *)
 let vulnerable_points (game: game) (move: move) (team: team): float =
-  0.0
-
-  (*
   let board = game.board in
   let opp_pieces = all_team_pieces board team in
   let moves_list = get_moves_list opp_pieces game [] in
   let capturable = pieces_capturable_by_moves moves_list board in
-
   List.fold_left (fun x y -> x +. (get_piece_val y)) 0. capturable
-*)
+
 let misc_points (board: board) (move: move) : float = 0.
 
 let eval (game: game) (move: move) : float =

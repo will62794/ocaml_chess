@@ -42,6 +42,9 @@ val get_nth_letter: int -> string
 
 val get_square_on_board: boardpos -> board -> square ref
 
+(* will throw exception if piece not at position *)
+val get_piece: board -> boardpos -> piece
+
 (* returns the boardpos for the given piece; if piece not found, return None *)
 val find_piece_pos: piece -> board -> boardpos option
 

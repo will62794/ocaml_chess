@@ -297,13 +297,16 @@ let detect_pawn_promotion (m:move) (g:game) : bool =
 	List.fold_left (&&) true conditions
 
 let detect_special_move (m:move) (g:game) : bool =
-	let detectors = [
-			(detect_castling m g Left);
-			(detect_castling m g Right);
-			(detect_en_passant m g);
-			(detect_pawn_promotion m g)
-		] in
-	List.fold_left (||) false detectors
+	let (pce,_,_) = m in
+	if not(List.mem pce.piecetype [Pawn;King]) then false
+	else
+		let detectors = [
+				(detect_castling m g Left);
+				(detect_castling m g Right);
+				(detect_en_passant m g);
+				(detect_pawn_promotion m g)
+			] in
+		List.fold_left (||) false detectors
 
 
 (* ======================================== *)
@@ -321,20 +324,18 @@ let check_mvmt_rules (m:move) (g:game) : bool =
 	let (pce,src,dst) = m in
 	let mvmt_type = (get_mvmt_type m g) in
 	(* let (dstx,dsty) = dst in *)
-	(* let _ = Printf.printf "movement_rule passed:%b\n" (movement_rule m g mvmt_type) in *)
 	(* check rules *)
-	let mvmt_conds = [
+(* 	let mvmt_conds = [
+		not (move_collisions m g.board);	 (* [RULE] the move does not collide w/ other pieces  *)
 		not (space_occupied dst g pce.team); (* [RULE] dst square must not be occupied by pce's team *)
 		movement_rule m g mvmt_type; 		 (* [RULE] piece obeys its movement constraints  *)
-		not (move_collisions m g.board) 	 (* [RULE] the move does not collide w/ other pieces  *)
-	]
-	in
-(* 	let _ = List.iter (fun x -> Printf.printf "%b, " x) mvmt_conds in
-	let _ = Printf.printf "piece:%s %s\n" pce.id pce.name in
-	let _ = Printf.printf "src:%s,%s\n" (fst src) (snd src) in
-	let _ = Printf.printf "dst:%s,%s\n" (fst dst) (snd dst) in
-	let _ = print_endline "" in *)
-	List.fold_left (&&) true mvmt_conds
+	] in *)
+	(* optimized version *)
+	if not (movement_rule m g mvmt_type) then false
+	else if (space_occupied dst g pce.team) then false
+	else if (move_collisions m g.board) then false
+	else true
+	(* List.fold_left (&&) true mvmt_conds *)
 
 (* assumes that the incoming move is a special move *)
 let handle_special_move (m:move) (g:game) : move_validation =
@@ -358,14 +359,19 @@ let handle_normal_move (m:move) (g:game) : move_validation =
 
 (* determines if a move is valid, given a game state *)
 let valid_move (m:move) (the_game:game) : move_validation =
+	(* let s = Unix.gettimeofday() in *)
 	(* universal rule - piece moves to valid board space  *)
 	if not (inbounds_rule m) then
 		Invalid(MovementImpossible)
 	else
-		if (detect_special_move m the_game) then
-			handle_special_move m the_game (* Special Move *)
-		else
-			handle_normal_move m the_game (* Normal Move *)
+		let validation =
+			if (detect_special_move m the_game) then
+				handle_special_move m the_game (* Special Move *)
+			else
+				handle_normal_move m the_game (* Normal Move *)
+			in
+		(* let _ = Printf.printf "finished:%f\n" (Unix.gettimeofday()-.s) in *)
+		validation
 
 
 (* ------------------------------------------ *)
@@ -387,25 +393,117 @@ let mtype_from_valid (mv:move_validation) : movetype =
 		| Valid mt -> mt
 		| Invalid ft -> failwith "move invalid"
 
+(* get all board positions in a row of square refs *)
+let row_to_positions (r:row) : boardpos list =
+	List.map (fun (c,sq) -> fst(!sq)) r
+
 (* given a piece and its position, determine what squares in this row the piece could move to.
  * In other words, what positions in this row satisfy the pieces rule requirements  *)
 let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): (move * movetype) list =
-	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in (* get all board positions in row *)
+	let sq_positions = row_to_positions r in
 	let moves = List.map (fun d-> (p,pos,d)) sq_positions in (* all poss. move destinations *)
 	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
 	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
 	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
 
+(*
+	takes a set of board positions and returns a list of moves. these moves
+	are all the valid moves that the given piece can take with any of the given positions
+	as destination.
+*)
+let piece_moves_in_set (p:piece) (pos:boardpos) (g:game) (positions:boardpos list): (move * movetype) list =
+	let moves = List.map (fun d-> (p,pos,d)) positions in (* all poss. move destinations *)
+	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
+	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
+	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
+
+let all_board_positions (b:board) =
+	let _,board_rows = List.split b in
+	List.flatten(List.map row_to_positions board_rows)
+
+(*
+	possible_movements utilizes the optimization techniques below. What we do is cut down the set of
+	board squares each piece tests to see if it can move there, instead of checking every board square for every
+	piece type. For Pawns, for example, there is a very small subset of the entire board that needs to be checked
+	for move validity, and we capitalize on this. Rooks, knights, kings etc. can take advantage of similar optimizations
+*)
+
+let optimization_flag = true
+
+let inbounds (x,y) = (x>=1 && x<=8 && y>=0 && y<=8)
+
+let pawn_mvmt_positions (b:board) (p:piece) (piece_pos:boardpos) =
+	(* All squares a radius of 2 from you (manhattan distance) *)
+	let (x,y) = boardpos_to_coords piece_pos in
+	let white_positions = [ (x+1,y+1);(x-1,y+1);(x,y+2);(x,y+1) ] in
+	let black_positions = [ (x-1,y-1);(x+1,y-1);(x,y-2);(x,y-1) ] in
+	let positions = if p.team=White then white_positions else black_positions in
+	List.map coords_to_boardpos (List.filter inbounds positions)
+
+
+let knight_mvmt_positions (b:board) (p:piece) (piece_pos) =
+	let (x,y) = boardpos_to_coords piece_pos in
+	let positions = [
+						(x+2,y+1);(x+2,y-1);
+					  	(x-2,y+1);(x-2,y-1);
+					  	(x+1,y+2);(x+1,y-2);
+					  	(x-1,y+2);(x-1,y-2)
+					] in
+	List.map coords_to_boardpos (List.filter inbounds positions)
+
+let king_mvmt_positions (b:board) (p:piece) (piece_pos) =
+	let (x,y) = boardpos_to_coords piece_pos in
+	let positions = [
+						(x+1,y+1);(x+1,y);(x+1,y-1);
+					  	(x-1,y+1);(x-1,y);(x-1,y-1);
+					  	(x,y-1);(x,y+1);
+					  	(x+2,y);(x-2,y); (* for castling *)
+					] in
+	List.map coords_to_boardpos positions
+
+let rook_mvmt_positions (b:board) (p:piece) (piece_pos) =
+	let (x,y) = boardpos_to_coords piece_pos in
+	let nums1 = List.mapi (fun i x -> (i+1)) [();();();();();();();()] in
+	let row = List.map (fun k -> (k,y)) nums1 in
+	let col = List.map (fun k -> (x,k)) nums1 in
+	List.map coords_to_boardpos (row@col)
+
+let bishop_mvmt_positions (b:board) (p:piece) (piece_pos) =
+	let (x,y) = boardpos_to_coords piece_pos in
+	let nums0 = List.mapi (fun i x -> (i)) [();();();();();();();()] in
+	let diag1 = List.map (fun k -> (x+k,y+k)) nums0 in
+	let diag2 = List.map (fun k -> (x+k,y-k)) nums0 in
+	let diag3 = List.map (fun k -> (x-k,y+k)) nums0 in
+	let diag4 = List.map (fun k -> (x-k,y-k)) nums0 in
+	let diags = diag1@diag2@diag3@diag4 in
+	List.map coords_to_boardpos (List.filter inbounds diags)
+
+let piece_position_set (b:board) (p:piece) (piece_pos:boardpos) =
+	match p.piecetype with
+		| Pawn -> pawn_mvmt_positions b p piece_pos
+		| Knight -> knight_mvmt_positions b p piece_pos
+		| King -> king_mvmt_positions b p piece_pos
+		| Rook -> rook_mvmt_positions b p piece_pos
+		| Bishop -> bishop_mvmt_positions b p piece_pos
+		| _ -> all_board_positions b
+
 let possible_movements (p:piece) (g:game) : (move * movetype) list =
+	(* let _ = (Printf.printf "Call to possible mvmts %f\n" (Sys.time())) in *)
 	let brd = g.board in
 	let piece_pos =
 		match find_piece_pos p brd with
 		 | Some pos -> pos
 		 | None -> failwith ("Piece "^p.id^" Not Found")
 	in
-	let _,board_rows = List.split brd in
-	let row_moves = List.map (piece_moves_in_row p piece_pos g) board_rows in
-	List.flatten row_moves
+	(* if optimization is enabled, cut down unnecessary postiion checking for each piece *)
+	let position_set =
+		if optimization_flag then
+			piece_position_set brd p piece_pos
+		else
+			all_board_positions brd
+	in
+	let all_moves = piece_moves_in_set p piece_pos g position_set in
+	all_moves
 
 let pieces_capturable_by_moves (moves:(move * movetype) list) (brd:board) : piece list =
 	let capture_moves = List.filter (fun (m,mt) -> (mt=Capture)) moves in
@@ -451,9 +549,6 @@ let king_in_check (t:team) (g:game) : checktype option =
 	  	else if (in_check team_king g) then Some(Check)
 	  	else None
 
-(* Does this move create a check or checkmate *)
-(* let move_creates_check (m:move) (g:game) =
-	update_game_with_move m g *)
 
 (* ---------------------------------------------------------------------------- *)
 (* ---------------------------------------------------------------------------- *)
@@ -626,9 +721,3 @@ TEST_MODULE "capturable" = struct
 	TEST = (piece_is_capturable g queen_white_1)=false
 
 end
-
-
-
-
-
-
