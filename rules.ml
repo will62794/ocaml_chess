@@ -394,18 +394,83 @@ let row_to_positions (r:row) : boardpos list =
 (* given a piece and its position, determine what squares in this row the piece could move to.
  * In other words, what positions in this row satisfy the pieces rule requirements  *)
 let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): (move * movetype) list = 
-	let sq_positions = List.map (fun (c,sq) -> fst(!sq)) r in (* get all board positions in row *)
+	let sq_positions = row_to_positions r in
 	let moves = List.map (fun d-> (p,pos,d)) sq_positions in (* all poss. move destinations *)
 	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
 	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
 	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
 
 (* 
-	takes a set of board positions and returns a list, out of the given positions of the valid moves
-	the piece could make
+	takes a set of board positions and returns a list of moves. these moves
+	are all the valid moves that the given piece can take with any of the given positions
+	as destination. 
 *)
-let piece_moves_in_set (p:piece) (pos:boardpos) (g:game) (r:boardpos list): (move * movetype) list =
-	failwith ""
+let piece_moves_in_set (p:piece) (pos:boardpos) (g:game) (positions:boardpos list): (move * movetype) list =
+	let moves = List.map (fun d-> (p,pos,d)) positions in (* all poss. move destinations *)
+	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
+	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
+	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
+
+let all_board_positions (b:board) = 
+	let _,board_rows = List.split b in
+	List.flatten(List.map row_to_positions board_rows)
+
+(*
+	possible_movements utilizes the optimization techniques below. What we do is cut down the set of 
+	board squares each piece tests to see if it can move there, instead of checking every board square for every
+	piece type. For Pawns, for example, there is a very small subset of the entire board that needs to be checked 
+	for move validity, and we capitalize on this. Rooks, knights, kings etc. can take advantage of similar optimizations
+*)
+
+let optimization_flag = true
+
+
+let pawn_mvmt_positions (b:board) (p:piece) (piece_pos:boardpos) = 
+	(* All squares a radius of 2 from you (manhattan distance) *)
+	let (x,y) = boardpos_to_coords piece_pos in
+	let positions = [ 
+						(x+1,y+1);(x-1,y-1);
+					  	(x+1,y-1);(x-1,y+1);
+					  	(x,y+2);(x,y-2);
+					  	(x,y+1);(x,y-1)
+					] in
+	List.map coords_to_boardpos positions
+
+
+let knight_mvmt_positions (b:board) (p:piece) (piece_pos) = 
+	let (x,y) = boardpos_to_coords piece_pos in
+	let positions = [ 
+						(x+2,y+1);(x+2,y-1);
+					  	(x-2,y+1);(x-2,y-1);
+					  	(x+1,y+2);(x+1,y-2);
+					  	(x-1,y+2);(x-1,y-2)
+					] in
+	List.map coords_to_boardpos positions
+
+let king_mvmt_positions (b:board) (p:piece) (piece_pos) = 
+	let (x,y) = boardpos_to_coords piece_pos in
+	let positions = [ 
+						(x+1,y+1);(x+1,y);(x+1,y-1);
+					  	(x-1,y+1);(x-1,y);(x-1,y-1);
+					  	(x,y-1);(x,y+1);
+					  	(x+2,y);(x-2,y); (* for castling *)
+					] in
+	List.map coords_to_boardpos positions
+
+let rook_mvmt_positions (b:board) (p:piece) (piece_pos) = 
+	let (x,y) = boardpos_to_coords piece_pos in
+	let nums = List.mapi (fun i x -> (i+1)) [();();();();();();();()] in
+	let row = List.map (fun k -> (k,y)) nums in
+	let col = List.map (fun k -> (x,k)) nums in
+	List.map coords_to_boardpos (row@col) 
+
+let piece_position_set (b:board) (p:piece) (piece_pos:boardpos) =
+	match p.piecetype with
+		| Pawn -> pawn_mvmt_positions b p piece_pos
+		| Knight -> knight_mvmt_positions b p piece_pos
+		| King -> king_mvmt_positions b p piece_pos
+		| Rook -> rook_mvmt_positions b p piece_pos
+		| _ -> all_board_positions b
 
 let possible_movements (p:piece) (g:game) : (move * movetype) list = 
 	let brd = g.board in
@@ -414,9 +479,15 @@ let possible_movements (p:piece) (g:game) : (move * movetype) list =
 		 | Some pos -> pos
 		 | None -> failwith ("Piece "^p.id^" Not Found") 
 	in
-	let _,board_rows = List.split brd in
-	let row_moves = List.map (piece_moves_in_row p piece_pos g) board_rows in
-	List.flatten row_moves
+	(* if optimization is enabled, cut down unnecessary postiion checking for each piece *)
+	let position_set = 
+		if optimization_flag then
+			piece_position_set brd p piece_pos 
+		else
+			all_board_positions brd
+	in
+	let all_moves = piece_moves_in_set p piece_pos g position_set in
+	all_moves
 
 let pieces_capturable_by_moves (moves:(move * movetype) list) (brd:board) : piece list = 
 	let capture_moves = List.filter (fun (m,mt) -> (mt=Capture)) moves in
