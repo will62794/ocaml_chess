@@ -42,7 +42,7 @@ let get_piece_val (piece: piece): float =
   | Bishop -> 300.
   | Rook -> 500.
   | Queen -> 900.
-  | King -> failwith ""
+  | King -> 1000000.
 
 let get_piece (board: board) (loc: boardpos): piece option =
   snd !(get_square_on_board loc board)

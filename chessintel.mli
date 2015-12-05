@@ -2,14 +2,12 @@ open Chesstypes
 (*
 	chessintel.mli
 
-	interface to the CamlChess AI engine
+	interface to the OCamlChess AI engine
 
 *)
 
-(* edit this interface *)
-
 
 (*Takes in a board and a difficulty level and returns a move*)
-val request_move: difficulty_level -> board -> move
+val request_move: difficulty_level -> game -> team -> move
 
 
