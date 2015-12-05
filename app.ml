@@ -39,7 +39,7 @@ let rec game_input g =
       | Move(x,y) -> let (bpos,pc') = !(get_square_on_board x g.board) in
                       begin
                        match pc' with
-                        | None -> print_endline("INVALID MOVE\n");
+                        | None -> print_endline("INVALID MOVE");
                                   game_input g
                         | Some pc -> (pc,x,y)
                       end
