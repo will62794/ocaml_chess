@@ -12,7 +12,7 @@ let parse_cmd s =
   if cmd = "start pvp" then StartPvP else
   if cmd = "start pvai" then StartPvAI else
   if cmd = "quit" || cmd = "exit" then Quit else
-  if String.length s <> 8
+  if String.length s < 8
   then InvalidCmd
   else
     let p1r = String.sub cmd 1 1 in
