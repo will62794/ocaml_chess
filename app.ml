@@ -43,7 +43,7 @@ let rec game_loop g gt team =
   else Printf.printf "Enter black's move:");
   game_input g)
   else
-      (let tree = generate_tree g 4 0.1 in
+      (let tree = generate_tree g 3 0.7 in
       let _ = print_tree tree in
       (match snd (min_max tree 2 team) with
                   | None -> failwith ""

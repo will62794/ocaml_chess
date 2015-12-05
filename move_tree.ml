@@ -66,24 +66,54 @@ let rec get_first_n inc_to_dec_list n =
   List.hd inc_to_dec_list :: get_first_n (List.tl inc_to_dec_list) (n-1)
 
 
-let filter_list (thelist: (move* movetype* float) list) (percentage:float)=
+let filter_list (thelist: (move* movetype* float) list) (percentage:float) (team:team)=
+match  team with
+| White ->
+let number_elements =  int_of_float (ceil (float_of_int((List.length thelist)) *. percentage)) in
+let sorted_list = List.sort (fun a b ->
+let (_,_,x) = a in let (_,_,y) = b in if x=y then 0 else if x>y then 1 else -1) thelist in
+let rev_sorted_list = List.rev sorted_list in
+get_first_n rev_sorted_list number_elements
+
+| Black->
   let number_elements =  int_of_float (ceil (float_of_int((List.length thelist)) *. percentage)) in
   let sorted_list = List.sort (fun a b ->
   let (_,_,x) = a in let (_,_,y) = b in if x=y then 0 else if x>y then 1 else -1) thelist in
-  let rev_sorted_list = List.rev sorted_list in
-  get_first_n rev_sorted_list number_elements
+  (*let rev_sorted_list = List.rev sorted_list in *)
+  get_first_n sorted_list number_elements
+
+
+(*Might have bug with branching factor*)
+
+
+let filter_failures (thelist: (move*movetype*(float option) ) list ) : (move* movetype * float ) list =
+(*('a -> 'b -> 'a) -> 'a -> 'b list -> 'a*)
+  List.fold_left (fun a b ->  match b with
+  | (_,_, None) -> a
+  | (x,y,Some z) -> List.append a [(x,y,z)]
+  ) [] thelist
+
+
+let eval_helper (game:game) (move:move) : float option =
+  try Some (eval (copy_game game) move) with
+  |_ -> None
 
 
 let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_before:move) (branching_factor:float) : move_tree=
-
+  print_string "Recursive helper for generate tree is called" ;
   if levels=0 then Leaf else
   let all_possible_moves = get_all_possible_moves ((copy_game game).current_turn) (game) in
-  let assoc_list = List.map (fun a -> (fst a , snd a , (eval (copy_game game) (fst a) ))) all_possible_moves in
-  (*[(move, move_type, float returned from eval)]*)
+  let assoc_list_3 = List.map (fun a -> (fst a , snd a , (eval_helper (copy_game game) (fst a) ))) all_possible_moves in
+  let assoc_list = filter_failures assoc_list_3 in
+
+  (*[(move, move_type, float option returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
-  let assoc_list_2 =  filter_list assoc_list branching_factor in
+  let assoc_list_2 =  filter_list assoc_list branching_factor (copy_game game).current_turn in
   let produce_game_float t = match t with
-  | (move, move_typ, score) -> ((update_game_with_move move_typ move (copy_game game)) , score, move) in
+  | (move, move_typ, score) -> ((update_game_with_move move_typ move (copy_game game)) , score, move)
+
+
+in
   let game_float_move = List.map produce_game_float assoc_list_2 in
   (*[(game , float, move)]*)
   let move_tree_list = List.map (fun a ->
@@ -98,12 +128,14 @@ let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_be
 (*Levels corresponds to how many steps down the tree it will go before
 terminating with Leaf*)
 let generate_tree (game:game) (levels:int) (branching_factor:float) =
+print_string "Top Level generate tree is called" ;
 let all_possible_moves = get_all_possible_moves ((copy_game game).current_turn) (game) in
-  let assoc_list = List.map (fun a -> (fst a , snd a , (eval (copy_game game) (fst a) ))) all_possible_moves in
-  (*[(move, move_type, float returned from eval)]*)
+  let assoc_list_3 = List.map (fun a -> (fst a , snd a , (eval_helper (copy_game game) (fst a) ))) all_possible_moves in
+  let assoc_list = filter_failures assoc_list_3 in
+  (*[(move, move_type, float option returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
 
- let assoc_list_2 =  filter_list assoc_list branching_factor in
+ let assoc_list_2 =  filter_list assoc_list branching_factor (copy_game game).current_turn in
   let produce_game_float t = match t with
   | (move, move_typ, score) -> ((update_game_with_move move_typ move (copy_game game)) , score, move) in
   let (game_float_move: (game*float*move) list) = List.map produce_game_float assoc_list_2 in
