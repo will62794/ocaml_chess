@@ -387,6 +387,10 @@ let mtype_from_valid (mv:move_validation) : movetype =
 		| Valid mt -> mt
 		| Invalid ft -> failwith "move invalid"
 
+(* get all board positions in a row of square refs *)
+let row_to_positions (r:row) : boardpos list =
+	List.map (fun (c,sq) -> fst(!sq)) r 
+
 (* given a piece and its position, determine what squares in this row the piece could move to.
  * In other words, what positions in this row satisfy the pieces rule requirements  *)
 let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): (move * movetype) list = 
@@ -395,6 +399,13 @@ let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): (move * movety
 	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
 	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
 	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
+
+(* 
+	takes a set of board positions and returns a list, out of the given positions of the valid moves
+	the piece could make
+*)
+let piece_moves_in_set (p:piece) (pos:boardpos) (g:game) (r:boardpos list): (move * movetype) list =
+	failwith ""
 
 let possible_movements (p:piece) (g:game) : (move * movetype) list = 
 	let brd = g.board in
