@@ -11,7 +11,7 @@ let depth =
 	try int_of_string Sys.argv.(1)
 	with Invalid_argument e -> 2
 
-let branching_factor = 0.2
+let branching_factor = 0.3
 
 
 (* test script for some ai performance profiling *)

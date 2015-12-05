@@ -297,13 +297,16 @@ let detect_pawn_promotion (m:move) (g:game) : bool =
 	List.fold_left (&&) true conditions
 
 let detect_special_move (m:move) (g:game) : bool = 
-	let detectors = [
-			(detect_castling m g Left); 
-			(detect_castling m g Right); 
-			(detect_en_passant m g); 
-			(detect_pawn_promotion m g)
-		] in
-	List.fold_left (||) false detectors
+	let (pce,_,_) = m in
+	if not(List.mem pce.piecetype [Pawn;King]) then false
+	else
+		let detectors = [
+				(detect_castling m g Left); 
+				(detect_castling m g Right); 
+				(detect_en_passant m g); 
+				(detect_pawn_promotion m g)
+			] in
+		List.fold_left (||) false detectors
 
 
 (* ======================================== *)
@@ -321,20 +324,18 @@ let check_mvmt_rules (m:move) (g:game) : bool =
 	let (pce,src,dst) = m in
 	let mvmt_type = (get_mvmt_type m g) in
 	(* let (dstx,dsty) = dst in *)
-	(* let _ = Printf.printf "movement_rule passed:%b\n" (movement_rule m g mvmt_type) in *)
 	(* check rules *)
-	let mvmt_conds = [
+(* 	let mvmt_conds = [
+		not (move_collisions m g.board);	 (* [RULE] the move does not collide w/ other pieces  *)
 		not (space_occupied dst g pce.team); (* [RULE] dst square must not be occupied by pce's team *)
 		movement_rule m g mvmt_type; 		 (* [RULE] piece obeys its movement constraints  *)
-		not (move_collisions m g.board) 	 (* [RULE] the move does not collide w/ other pieces  *)
-	] 
-	in
-(* 	let _ = List.iter (fun x -> Printf.printf "%b, " x) mvmt_conds in
-	let _ = Printf.printf "piece:%s %s\n" pce.id pce.name in
-	let _ = Printf.printf "src:%s,%s\n" (fst src) (snd src) in
-	let _ = Printf.printf "dst:%s,%s\n" (fst dst) (snd dst) in 
-	let _ = print_endline "" in *)
-	List.fold_left (&&) true mvmt_conds
+	] in *)
+	(* optimized version *)
+	if not (movement_rule m g mvmt_type) then false 
+	else if (space_occupied dst g pce.team) then false
+	else if (move_collisions m g.board) then false	 
+	else true		
+	(* List.fold_left (&&) true mvmt_conds *)
 
 (* assumes that the incoming move is a special move *)
 let handle_special_move (m:move) (g:game) : move_validation = 
@@ -358,14 +359,19 @@ let handle_normal_move (m:move) (g:game) : move_validation =
 
 (* determines if a move is valid, given a game state *)
 let valid_move (m:move) (the_game:game) : move_validation =
+	(* let s = Unix.gettimeofday() in *)
 	(* universal rule - piece moves to valid board space  *)
 	if not (inbounds_rule m) then 
 		Invalid(MovementImpossible) 
 	else
-		if (detect_special_move m the_game) then 
-			handle_special_move m the_game (* Special Move *)
-		else
-			handle_normal_move m the_game (* Normal Move *)
+		let validation =
+			if (detect_special_move m the_game) then 
+				handle_special_move m the_game (* Special Move *)
+			else
+				handle_normal_move m the_game (* Normal Move *)
+			in
+		(* let _ = Printf.printf "finished:%f\n" (Unix.gettimeofday()-.s) in *)
+		validation
 
 
 (* ------------------------------------------ *)
@@ -459,7 +465,7 @@ let rook_mvmt_positions (b:board) (p:piece) (piece_pos) =
 	let (x,y) = boardpos_to_coords piece_pos in
 	let nums1 = List.mapi (fun i x -> (i+1)) [();();();();();();();()] in
 	let row = List.map (fun k -> (k,y)) nums1 in
-	let col = List.map (fun k -> (x,k)) nums1 in
+	let col = List.map (fun k -> (x,k)) nums1 in 
 	List.map coords_to_boardpos (row@col) 
 
 let bishop_mvmt_positions (b:board) (p:piece) (piece_pos) = 
