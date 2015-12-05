@@ -30,7 +30,8 @@ let print_move_instructions () =
   let _ = print_endline("Moves are entered in the following format:") in
   let _ = print_endline("<source_column><source_row> to <dest_column><dest_row>") in
   let _ = print_endline("for example, 'a2 to a3' ") in
-  print_endline("type 'quit' to exit\n")
+  let _ = print_endline("type 'quit' to exit") in
+  print_endline("type 'help' to see the instructions again")
 
 let invalid_move_msg () =
   print_endline("Invalid Move.")
@@ -46,8 +47,9 @@ let rec game_input g name =
   let cmd_type = parse_cmd(read_line()) in
     match cmd_type with
       | Quit -> exit 0
+      | Help -> print_move_instructions(); game_input g name
       | Move(src,dst) ->
-        if square_empty src g.board then let _ = invalid_move_msg() in let _ = print_string(name^"s turn: Enter move") in game_input g name
+        if square_empty src g.board then let _ = invalid_move_msg() in let _ = print_string(name^"'s turn: Enter move") in game_input g name
         else
           let pce = get_piece g.board src in
           let move = (pce,src,dst) in
@@ -64,13 +66,12 @@ let rec game_loop g gt team pb_bool white_name black_name =
   let _ = if pb_bool then print_board(g.board) else () in
   let pmove =
     if (gt || team=White) then
-      if(team = White) then let _ = print_string(white_name^"'s turn. Enter move") in game_input g white_name
-      else let _ = print_string(black_name^"'s turn. Enter move") in game_input g black_name
+      (if(team = White) then let _ = print_string(white_name^"'s turn. Enter move") in game_input g white_name
+      else let _ = print_string(black_name^"'s turn. Enter move") in game_input g black_name)
   else
     (* Request move from the AI *)
-    let _ = print_endline "AI pondering move..." in
+    let _ = print_endline "Thinking..." in
     request_move 1 g team in
-  (*let _ = print_endline "" in*)
   match pmove with
     | (piece, _, _) -> if piece.team <> team
   then let _ =  invalid_move_msg() in game_loop g gt team false white_name black_name else
@@ -109,6 +110,8 @@ let rec main_input () =
                      print_move_instructions();
                      game_loop (make_game()) (false) White true white_name "AI"
       | Quit -> exit 0
+      | Help -> print_endline("Please enter a valid command");
+                main_input()
       | Move(a,b) -> print_endline("Please enter a valid command");
                      main_input()
       | InvalidCmd -> print_endline("Please enter a valid command");

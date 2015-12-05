@@ -9,6 +9,7 @@ type command =
   | StartPvP
   | StartPvAI
   | Quit
+  | Help
   | Move of boardpos * boardpos
   | InvalidCmd
 
