@@ -78,7 +78,7 @@ let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_be
 
   if levels=0 then Leaf else
   let all_possible_moves = get_all_possible_moves ((copy_game game).current_turn) (game) in
-  let assoc_list = List.map (fun a -> (fst a , snd a , (eval (copy_game game) (fst a)))) all_possible_moves in
+  let assoc_list = List.map (fun a -> (fst a , snd a , (eval (copy_game game) (fst a) ))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
   let assoc_list_2 =  filter_list assoc_list branching_factor in
@@ -99,7 +99,7 @@ let rec generate_tree_helper (prev_num: float) (game:game) (levels:int) (move_be
 terminating with Leaf*)
 let generate_tree (game:game) (levels:int) (branching_factor:float) =
 let all_possible_moves = get_all_possible_moves ((copy_game game).current_turn) (game) in
-  let assoc_list = List.map (fun a -> (fst a , snd a , (eval (copy_game game) (fst a)))) all_possible_moves in
+  let assoc_list = List.map (fun a -> (fst a , snd a , (eval (copy_game game) (fst a) ))) all_possible_moves in
   (*[(move, move_type, float returned from eval)]*)
   (*update_game_with_move: move_type -> move -> game-> game*)
 
@@ -141,6 +141,7 @@ let rec print_tree (move_tree: move_tree): unit =
       let _ = print_string (string_of_int (int_of_float score)) in
       let _= print_string "\n" in
       let _= print_game game in
+      let _ = List.map (fun a -> print_tree a) move_tree_list in
       ()
       end
   | Leaf -> print_string "This is a leaf \n "
