@@ -545,9 +545,6 @@ let king_in_check (t:team) (g:game) : checktype option =
 	  	else if (in_check team_king g) then Some(Check)
 	  	else None
 
-(* Does this move create a check or checkmate *)
-(* let move_creates_check (m:move) (g:game) = 
-	update_game_with_move m g *)
 
 (* ---------------------------------------------------------------------------- *)
 (* ---------------------------------------------------------------------------- *)
