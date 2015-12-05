@@ -424,7 +424,6 @@ let all_board_positions (b:board) =
 
 let optimization_flag = true
 
-
 let pawn_mvmt_positions (b:board) (p:piece) (piece_pos:boardpos) = 
 	(* All squares a radius of 2 from you (manhattan distance) *)
 	let (x,y) = boardpos_to_coords piece_pos in
@@ -459,10 +458,21 @@ let king_mvmt_positions (b:board) (p:piece) (piece_pos) =
 
 let rook_mvmt_positions (b:board) (p:piece) (piece_pos) = 
 	let (x,y) = boardpos_to_coords piece_pos in
-	let nums = List.mapi (fun i x -> (i+1)) [();();();();();();();()] in
-	let row = List.map (fun k -> (k,y)) nums in
-	let col = List.map (fun k -> (x,k)) nums in
+	let nums1 = List.mapi (fun i x -> (i+1)) [();();();();();();();()] in
+	let row = List.map (fun k -> (k,y)) nums1 in
+	let col = List.map (fun k -> (x,k)) nums1 in
 	List.map coords_to_boardpos (row@col) 
+
+let bishop_mvmt_positions (b:board) (p:piece) (piece_pos) = 
+	let (x,y) = boardpos_to_coords piece_pos in
+	let nums0 = List.mapi (fun i x -> (i)) [();();();();();();();()] in
+	let inbounds (x,y) = x>=1 && x<=8 && y>=0 && y<=8 in
+	let diag1 = List.map (fun k -> (x+k,y+k)) nums0 in
+	let diag2 = List.map (fun k -> (x+k,y-k)) nums0 in
+	let diag3 = List.map (fun k -> (x-k,y+k)) nums0 in
+	let diag4 = List.map (fun k -> (x-k,y-k)) nums0 in
+	let diags = List.filter inbounds (diag1@diag2@diag3@diag4) in
+	List.map coords_to_boardpos diags
 
 let piece_position_set (b:board) (p:piece) (piece_pos:boardpos) =
 	match p.piecetype with
@@ -470,9 +480,11 @@ let piece_position_set (b:board) (p:piece) (piece_pos:boardpos) =
 		| Knight -> knight_mvmt_positions b p piece_pos
 		| King -> king_mvmt_positions b p piece_pos
 		| Rook -> rook_mvmt_positions b p piece_pos
+		| Bishop -> bishop_mvmt_positions b p piece_pos
 		| _ -> all_board_positions b
 
 let possible_movements (p:piece) (g:game) : (move * movetype) list = 
+	(* let _ = (Printf.printf "Call to possible mvmts %f\n" (Sys.time())) in *)
 	let brd = g.board in
 	let piece_pos = 
 		match find_piece_pos p brd with
