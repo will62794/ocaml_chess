@@ -10,3 +10,4 @@ open Chesstypes
 
 val print_board: board -> unit
 
+val print_total_moves: int -> unit

@@ -63,7 +63,7 @@ let rec game_input g name =
 
 
 let rec game_loop g gt team pb_bool white_name black_name =
-  let _ = if pb_bool then print_board(g.board) else () in
+  let _ = if pb_bool then let _ = print_board(g.board) in print_total_moves(g.total_moves) else () in
   let pmove =
     if (gt || team=White) then
       (if(team = White) then let _ = print_string(white_name^"'s turn. Enter move") in game_input g white_name
