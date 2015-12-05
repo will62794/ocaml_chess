@@ -424,16 +424,15 @@ let all_board_positions (b:board) =
 
 let optimization_flag = true
 
+let inbounds (x,y) = (x>=1 && x<=8 && y>=0 && y<=8)
+
 let pawn_mvmt_positions (b:board) (p:piece) (piece_pos:boardpos) = 
 	(* All squares a radius of 2 from you (manhattan distance) *)
 	let (x,y) = boardpos_to_coords piece_pos in
-	let positions = [ 
-						(x+1,y+1);(x-1,y-1);
-					  	(x+1,y-1);(x-1,y+1);
-					  	(x,y+2);(x,y-2);
-					  	(x,y+1);(x,y-1)
-					] in
-	List.map coords_to_boardpos positions
+	let white_positions = [ (x+1,y+1);(x-1,y+1);(x,y+2);(x,y+1) ] in
+	let black_positions = [ (x-1,y-1);(x+1,y-1);(x,y-2);(x,y-1) ] in
+	let positions = if p.team=White then white_positions else black_positions in
+	List.map coords_to_boardpos (List.filter inbounds positions)
 
 
 let knight_mvmt_positions (b:board) (p:piece) (piece_pos) = 
@@ -444,7 +443,7 @@ let knight_mvmt_positions (b:board) (p:piece) (piece_pos) =
 					  	(x+1,y+2);(x+1,y-2);
 					  	(x-1,y+2);(x-1,y-2)
 					] in
-	List.map coords_to_boardpos positions
+	List.map coords_to_boardpos (List.filter inbounds positions)
 
 let king_mvmt_positions (b:board) (p:piece) (piece_pos) = 
 	let (x,y) = boardpos_to_coords piece_pos in
@@ -466,13 +465,12 @@ let rook_mvmt_positions (b:board) (p:piece) (piece_pos) =
 let bishop_mvmt_positions (b:board) (p:piece) (piece_pos) = 
 	let (x,y) = boardpos_to_coords piece_pos in
 	let nums0 = List.mapi (fun i x -> (i)) [();();();();();();();()] in
-	let inbounds (x,y) = x>=1 && x<=8 && y>=0 && y<=8 in
 	let diag1 = List.map (fun k -> (x+k,y+k)) nums0 in
 	let diag2 = List.map (fun k -> (x+k,y-k)) nums0 in
 	let diag3 = List.map (fun k -> (x-k,y+k)) nums0 in
 	let diag4 = List.map (fun k -> (x-k,y-k)) nums0 in
-	let diags = List.filter inbounds (diag1@diag2@diag3@diag4) in
-	List.map coords_to_boardpos diags
+	let diags = diag1@diag2@diag3@diag4 in
+	List.map coords_to_boardpos (List.filter inbounds diags)
 
 let piece_position_set (b:board) (p:piece) (piece_pos:boardpos) =
 	match p.piecetype with
