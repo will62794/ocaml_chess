@@ -53,6 +53,10 @@ TEST_MODULE "king in check" = struct
 
 	TEST = (king_in_check White g)=Some(Checkmate)
 
+	let king_move = (king_white_1,("1", "e"),("2", "f"))
+	let validation = valid_move king_move g
+	TEST = (validation = Invalid(WouldBeCheck))
+
 end
 
 Pa_ounit_lib.Runtime.summarize ()
