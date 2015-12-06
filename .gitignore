@@ -2,3 +2,4 @@ _build/
 inline_tests.log
 *.o
 *.cm*
+vclog.txt
