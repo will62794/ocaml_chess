@@ -70,7 +70,7 @@ let rec game_loop g gt team pb_bool white_name black_name =
       else let _ = print_string(black_name^"'s turn. Enter move") in game_input g black_name)
   else
     (* Request move from the AI *)
-    let _ = print_endline "Thinking..." in
+    let _ = print_endline "||| AI Thinking..." in
     request_move 1 g team in
   match pmove with
     | (piece, _, _) -> if piece.team <> team
