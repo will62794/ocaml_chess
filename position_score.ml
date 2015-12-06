@@ -24,7 +24,7 @@ let rec create_board (board: pos_board) (vals: float list)
         if (col = 7) then create_board board t (row-1) 0
         else create_board board t row (col+1)
 
-let pawn_vals = [ 0.;  0.;  0.;  0.;  0.;  0.;  0.;  0.;
+let pawn_vals = [ 75.;  75.;  75.;  75.;  75.;  75.;  75.;  75.;
           50.; 50.; 50.; 50.; 50.; 50.; 50.; 50.;
           10.; 10.; 20.; 30.; 30.; 20.; 10.; 10.;
            5.;  5.; 10.; 27.; 27.; 10.;  5.;  5.;

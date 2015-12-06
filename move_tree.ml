@@ -65,6 +65,12 @@ let rec get_first_n inc_to_dec_list n =
   if n=0 then [] else
   List.hd inc_to_dec_list :: get_first_n (List.tl inc_to_dec_list) (n-1)
 
+(*Sorted, Sorted , Yes somewhat
+Sorted, Rev_Sorted No
+Rev_Sorted, Sorted No
+Rev_Sortedd, Rev_Sorted*)
+
+
 
 let filter_list (thelist: (move* movetype* float) list) (percentage:float) (team:team)=
 match  team with

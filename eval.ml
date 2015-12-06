@@ -72,12 +72,12 @@ let rec get_moves_list (pieces: piece list) (game: game)
   | h::t -> get_moves_list t game ((possible_movements h game) @ acc)
 
 (* pieces from op team, double check this func lol *)
-let vulnerable_points (game: game) (move: move) (team: team): float =
-  let board = game.board in
+let vulnerable_points (game: game) (move: move) (team: team): float = 0.
+  (* let board = game.board in
   let opp_pieces = all_team_pieces board team in
   let moves_list = get_moves_list opp_pieces game [] in
   let capturable = pieces_capturable_by_moves moves_list board in
-  List.fold_left (fun x y -> x +. (get_piece_val y)) 0. capturable
+  List.fold_left (fun x y -> x +. (get_piece_val y)) 0. capturable *)
 
 let misc_points (board: board) (move: move) : float = 0.
 
