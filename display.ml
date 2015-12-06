@@ -29,3 +29,7 @@ let print_board (b:board) =
 	let _ = List.iter (fun (id,r) -> (print_boardrow r id)) (List.rev b) in
 	let _ = Printf.printf "   ╚═══════════════════════\n" in
 	Printf.printf "     A  B  C  D  E  F  G  H\n"
+
+let print_total_moves (tm:int) =
+	let tm' = string_of_int(tm) in
+	print_endline("Total Moves Taken: "^tm')

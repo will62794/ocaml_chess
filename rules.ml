@@ -357,22 +357,6 @@ let handle_normal_move (m:move) (g:game) : move_validation =
 	else
 		Invalid(MovementImpossible)
 
-(* determines if a move is valid, given a game state *)
-let valid_move (m:move) (the_game:game) : move_validation =
-	(* let s = Unix.gettimeofday() in *)
-	(* universal rule - piece moves to valid board space  *)
-	if not (inbounds_rule m) then
-		Invalid(MovementImpossible)
-	else
-		let validation =
-			if (detect_special_move m the_game) then
-				handle_special_move m the_game (* Special Move *)
-			else
-				handle_normal_move m the_game (* Normal Move *)
-			in
-		(* let _ = Printf.printf "finished:%f\n" (Unix.gettimeofday()-.s) in *)
-		validation
-
 
 (* ------------------------------------------ *)
 (* --- Inverse Rule Calculations ------------ *)
@@ -396,26 +380,6 @@ let mtype_from_valid (mv:move_validation) : movetype =
 (* get all board positions in a row of square refs *)
 let row_to_positions (r:row) : boardpos list =
 	List.map (fun (c,sq) -> fst(!sq)) r
-
-(* given a piece and its position, determine what squares in this row the piece could move to.
- * In other words, what positions in this row satisfy the pieces rule requirements  *)
-let piece_moves_in_row (p:piece) (pos:boardpos) (g:game) (r:row): (move * movetype) list =
-	let sq_positions = row_to_positions r in
-	let moves = List.map (fun d-> (p,pos,d)) sq_positions in (* all poss. move destinations *)
-	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
-	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
-	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
-
-(*
-	takes a set of board positions and returns a list of moves. these moves
-	are all the valid moves that the given piece can take with any of the given positions
-	as destination.
-*)
-let piece_moves_in_set (p:piece) (pos:boardpos) (g:game) (positions:boardpos list): (move * movetype) list =
-	let moves = List.map (fun d-> (p,pos,d)) positions in (* all poss. move destinations *)
-	let moves = List.map ( fun m -> (m,(valid_move m g)) ) moves in
-	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
-	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
 
 let all_board_positions (b:board) =
 	let _,board_rows = List.split b in
@@ -487,7 +451,50 @@ let piece_position_set (b:board) (p:piece) (piece_pos:boardpos) =
 		| Bishop -> bishop_mvmt_positions b p piece_pos
 		| _ -> all_board_positions b
 
-let possible_movements (p:piece) (g:game) : (move * movetype) list =
+
+(* 
+	determines if a move is valid, given a game state 
+	if check_checks is false, it will not check to make sure that the move
+	violates any of the check or checkmate rules. 
+*)
+let rec valid_move ?(checks=true) (m:move) (the_game:game) : move_validation =
+	(* universal rule - piece moves to valid board space  *)
+	if not (inbounds_rule m) then
+		Invalid(MovementImpossible)
+	else
+		let validation =
+			if (detect_special_move m the_game) then
+				handle_special_move m the_game (* Special Move *)
+			else
+				handle_normal_move m the_game (* Normal Move *)
+			in
+		(* disallow moving to check  *)
+ 		match validation with
+			| Invalid ft -> Invalid ft
+			| Valid mt -> 
+				if checks then 
+					if (would_be_check mt m the_game) then Invalid(WouldBeCheck)
+					else Valid mt
+				else 
+					Valid mt 
+
+(*
+	takes a set of board positions and returns a list of moves. these moves
+	are all the valid moves that the given piece can take with any of the given positions
+	as destination.
+*)
+and piece_moves_in_set ?(checks=true) (p:piece) (pos:boardpos) (g:game) (positions:boardpos list): (move * movetype) list =
+	let moves = List.map (fun d-> (p,pos,d)) positions in (* all poss. move destinations *)
+	let moves = List.map ( fun m -> (m,(valid_move ~checks:checks m g)) ) moves in
+	let valid_move_validations = List.filter (fun (m,mv) -> move_validation_to_bool mv) moves in
+	List.map (fun (m,mv) -> (m,(mtype_from_valid mv)) ) valid_move_validations (* map validations to their movetypes *)
+
+(* 
+	finds all possible movements for piece.
+	if check_checks is false, it disregards any check or checkmate
+	rule restrictions.
+*)
+and possible_movements ?(checks=true) (p:piece) (g:game) : (move * movetype) list =
 	(* let _ = (Printf.printf "Call to possible mvmts %f\n" (Sys.time())) in *)
 	let brd = g.board in
 	let piece_pos =
@@ -502,20 +509,36 @@ let possible_movements (p:piece) (g:game) : (move * movetype) list =
 		else
 			all_board_positions brd
 	in
-	let all_moves = piece_moves_in_set p piece_pos g position_set in
+	let all_moves = piece_moves_in_set ~checks:checks p piece_pos g position_set in
 	all_moves
 
-let pieces_capturable_by_moves (moves:(move * movetype) list) (brd:board) : piece list =
+and would_be_check (mt:movetype) (m:move) (g:game) : bool = 
+	let (p,s,d) = m in
+	let opp_team = if p.team=White then Black else White in
+	(* let _ = print_endline p.id in *)
+	try 
+		let new_game = update_game_with_move mt m g in
+		let opp_team_pieces = all_team_pieces new_game.board opp_team in
+		let opp_moves_lst = List.map (fun pce -> possible_movements ~checks:false pce new_game) opp_team_pieces in
+		let opp_moves = List.flatten opp_moves_lst in
+		let team_king = {id="K"; team=p.team; name="King"; piecetype=King;} in
+		if List.mem team_king (pieces_capturable_by_moves opp_moves new_game.board) then true else false
+	with Failure s -> false
+
+
+and pieces_capturable_by_moves (moves:(move * movetype) list) (brd:board) : piece list =
 	let capture_moves = List.filter (fun (m,mt) -> (mt=Capture)) moves in
 	let capturable_sqs = List.map (fun ((p,s,d),mt) -> !(get_square_on_board d brd)) capture_moves in
 	List.map piece_at_sq capturable_sqs
 
-let piece_is_capturable (g:game) (p:piece) : bool =
+and piece_is_capturable (g:game) (p:piece) : bool =
 	let opp_team = if p.team=White then Black else White in
 	let opp_pieces = all_team_pieces g.board opp_team in
 	let opp_moves = List.flatten(List.map (fun pce -> possible_movements pce g) opp_pieces) in
 	let vulnerable_pcs = pieces_capturable_by_moves opp_moves g.board in
 	List.mem p vulnerable_pcs
+
+
 
 (* -------------------------------------- *)
 (* --- Checks and Checkmates ------------ *)

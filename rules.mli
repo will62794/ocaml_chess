@@ -16,13 +16,13 @@ open Chessmodel
 	as governed by standard chess rules, and returns the validation type of that 
 	move, if valid
 *)
-val valid_move : move -> game -> move_validation
+val valid_move : ?checks:bool -> move -> game -> move_validation
 
 (* 
 	Get all possible moves for piece on the board
   	as well as opponent's vulnerabilities, given a game state
 *)
-val possible_movements: piece -> game -> (move * movetype) list
+val possible_movements: ?checks:bool -> piece -> game -> (move * movetype) list
 
 (* 
 	Given a list of valid moves, determines all of the opponent pieces that would are capturable
@@ -37,4 +37,7 @@ val pieces_capturable_by_moves: (move * movetype) list -> board -> piece list
   if neither. Will return None if the specified king isn't on the board 
 *)
 val king_in_check: team -> game -> checktype option
+
+
+val would_be_check: movetype -> move -> game -> bool
 

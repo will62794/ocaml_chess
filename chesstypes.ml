@@ -30,7 +30,7 @@ type row = (string * square ref) list (* (row #, list of squares) *)
 type board = (string * row) list
 
 type move = piece * boardpos * boardpos  (* represents a physical move --> (piece, src, dest) *)
-type failtype = MovementImpossible | MoveError
+type failtype = MovementImpossible | MoveError | WouldBeCheck
 type movetype = Basic | Capture | EnPassant | CastlingLeft | CastlingRight | PawnPromotion
 type move_validation = Valid of movetype | Invalid of failtype
 
